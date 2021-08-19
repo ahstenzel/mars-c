@@ -2,7 +2,6 @@
  *	mars_common.c
  *	Definitions for functions used throughout the project.
  */
-
 #include "mars_common.h"
 
 int gettimeofday(struct timeval* tp, struct timezone* tzp) {

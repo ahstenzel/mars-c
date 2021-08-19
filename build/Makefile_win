@@ -1,0 +1,39 @@
+# Define macros
+CC = cl.exe
+CFLAGS = /c /O2 /EHsc
+LINKER = lib.exe
+LFLAGS = /out:$(DIR_BIN)\$(OUT).lib
+ARCH = .
+DIR_ROOT = .
+OUT = libmars
+DIR_SRC = $(DIR_ROOT)\src
+DIR_OBJ = $(DIR_ROOT)\obj
+DIR_BIN = $(DIR_ROOT)\bin\win\$(ARCH)
+
+# Define object files
+OBJ_FILES=\
+  mars_common.o\
+	mars_component_transform.o\
+	mars_engine.o\
+	mars_entity.o\
+	mars_system_transform.o
+
+# Build sequence
+all: create_dirs $(OUT)
+
+# Build objects
+$(OBJ_FILES): 
+	$(CC) $(CFLAGS) /Fo$(DIR_OBJ)\$*.o $(DIR_SRC)\$*.c
+
+# Link objects into final file
+$(OUT): $(OBJ_FILES)
+	$(LINKER) $(LFLAGS) $(DIR_OBJ)\*.o
+
+# Create directories
+create_dirs:
+ @if not exist $(DIR_BIN) mkdir $(DIR_BIN)
+ @if not exist $(DIR_OBJ) mkdir $(DIR_OBJ)
+
+# Remove object files
+clean:
+ @if exist $(DIR_OBJ) rmdir /S /Q $(DIR_OBJ)

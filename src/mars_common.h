@@ -9,10 +9,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <stdbool.h>
 
 // Typedefs
-typedef unsigned int (*fptr_t)();           // Function pointer type with no arguments
-typedef unsigned int (*fptrfl_t)(float);    // Function pointer type with one float argument
+typedef unsigned int (*fptr_t)(void*);		// Function pointer type with void* argument
+typedef unsigned long int uuid;						// Unique ID type for entities
+
+// Defines
+#define DllExport   __declspec( dllexport )
+static uuid _uuid_iterator = 0;
 
 // Platform specific code
 #if defined(_WIN32)
@@ -25,7 +30,7 @@ typedef struct {
 } timeval;
 
 // Mimic linux gettimeofday function for wall clock time measurements
-int gettimeofday(struct timeval * tp, struct timezone * tzp);
+DllExport int gettimeofday(struct timeval * tp, struct timezone * tzp);
 
 #elif defined(__linux__)
 #include <sys/time.h>
