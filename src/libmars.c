@@ -61,6 +61,18 @@ void component_transform_update(ComponentTransform* component, float dt) {
 	component->l_y = _y_;
 }
 
+/*=======================================================*/
+/* Step Component                                        */
+/*=======================================================*/
+void component_step_init(ComponentStep* component) {
+  component->entity_id = 0;
+  component->event = NULL;
+}
+
+void component_step_update(ComponentStep* component, float dt) {
+  if (component->event) { component->event(&dt); }
+}
+
 
 /*=======================================================================================*/
 /* Systems                                                                               */
@@ -110,6 +122,50 @@ void system_transform_free(SystemTransform* system) {
 	free(system->components);
 }
 
+/*=======================================================*/
+/* Step System                                           */
+/*=======================================================*/
+uint8_t system_step_init(SystemStep* system) {
+	// Initialize values
+	system->size = 8;
+	system->num = 0;
+	// Allocate memory
+	system->components = malloc(system->size*sizeof(ComponentStep));
+	if (!system->components) { return 1; }
+	else { return 0; }
+}
+
+ComponentStep* system_step_get_component(SystemStep* system, uint32_t id) {
+	if (id < system->num) { return &(system->components[id]); }
+	else { return NULL; }
+}
+
+uint8_t system_step_add_component(SystemStep* system, uint32_t id) {
+	// Allocate more space if needed
+	if (id >= system->size) {
+		system->size *= 2;
+		ComponentStep *_temp = realloc(system->components, system->size*sizeof(ComponentStep));
+		if (!_temp) { return 1; }
+		else { system->components = _temp; }
+	}
+	// Initialize component
+	component_step_init(&(system->components[id]));
+	// Register component in list
+	system->components[id].entity_id = id;
+	system->num++;
+	return 0;
+}
+
+void system_step_update(SystemStep* system, float dt) {
+	for(size_t i=0; i<system->num; ++i) {
+		component_step_update(&(system->components[i]), dt);
+	}
+}
+
+void system_step_free(SystemStep* system) {
+	free(system->components);
+}
+
 
 
 /*=======================================================================================*/
@@ -124,6 +180,7 @@ uint8_t engine_init(Engine* engine) {
 	engine->dt = 0.0f;
 	engine->run = true;
 	engine->sys_transform = malloc(sizeof(SystemTransform));
+  engine->sys_step = malloc(sizeof(SystemStep));
 
 	// Get current time
 	gettimeofday(&(engine->old_time), 0);
@@ -146,6 +203,7 @@ uint8_t engine_update(Engine* engine) {
 		while (engine->time_accum >= engine->dt) {
 			// Update systems
 			system_transform_update(engine->sys_transform, engine->dt);
+      system_step_update(engine->sys_step, engine->dt);
 
 			// Reduce remaining time
 			engine->time_accum -= engine->dt;
@@ -163,5 +221,6 @@ uint8_t engine_update(Engine* engine) {
 uint8_t engine_free(Engine* engine) {
 	if (engine->on_free) { engine->on_free(engine); }
 	free(engine->sys_transform);
+  free(engine->sys_step);
 	return 0;
 }

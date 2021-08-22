@@ -4,8 +4,9 @@
 ::  /        \   /----\  |-----/ \-----\
 :: /          \ /      \ |     \  _____/
 ::
-:: Builds and installs library files on a Windows host platform using the 
-:: MSVC toolchain. Defaults to building for the host architecture.
+:: Installs library files and headers to a dedicated directory in 
+:: Program Files. Defaults to installing library files for the host
+:: architecture. {TODO: Register DLLs}
 ::
 :: build_win.bat [options]
 ::   /A {value}: Set target architecture. Defaults to host architecture.
@@ -13,7 +14,6 @@
 ::       x64:   64-bit native
 ::       arm:   32-bit ARM
 ::       arm64: 64-bit ARM
-::   /Db: Build with debug tools
 ::   /N: Do not wait for user input when install is finished
 ::    
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -49,13 +49,11 @@ if '%errorlevel%' NEQ '0' (
 :-------------------------------------- 
 
 :: Define macros
-set VCVARS="C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsall.bat"
 reg Query "HKLM\Hardware\Description\System\CentralProcessor\0" | find /i "x86" > NUL && set HOST=x86 || set HOST=x64
 set CPATH=%~dp0
 
 :: Parse arguments
 set TARGET=%HOST%
-set CONFIG=release
 set NOWAIT=0
 :Args
 set arg=%1
@@ -64,9 +62,6 @@ if defined arg (
 		:: Get architecture
 		set TARGET=%2
 		shift
-	) else if "%1"=="/Db" (
-		:: Set debug config
-		set CONFIG=debug
 	) else if "%1"=="/N" (
 		:: Set No Wait
 		set NOWAIT=1
@@ -78,55 +73,18 @@ if defined arg (
 )
 
 :: Check for valid environment
-if "%TARGET%"=="x86" goto LoadEnv
-if "%TARGET%"=="x64" goto LoadEnv
-if "%TARGET%"=="arm" goto LoadEnv
-if "%TARGET%"=="arm64" goto LoadEnv
+if "%TARGET%"=="x86" goto Install
+if "%TARGET%"=="x64" goto Install
+if "%TARGET%"=="arm" goto Install
+if "%TARGET%"=="arm64" goto Install
 goto ShowHelp
 
-:: Load correct environment
-:LoadEnv
-set FULLTARGET=%TARGET%
-if not "%TARGET%"=="%HOST%" set FULLTARGET=%HOST%_%TARGET%
-echo Loading MSVC %FULLTARGET% environment...
-if not defined DevEnvDir (
-	call %VCVARS% %FULLTARGET%
-)
-
-:: Check tools loaded correctly
-if not defined DevEnvDir (
-	echo Failed to load Visual Studio development environment!
-	goto End
-)
-
-:: Set environment variables
-set /p VER=<%CPATH%..\VERSION
-set OUT=libmars
-set CFLAGS=/DVERSION=%VER%
+:: Move files
+:Install
+echo Installing...
 set INC_DIR=%CPATH%..\include
-set SRC_DIR=%CPATH%..\src
 set BIN_DIR=%CPATH%..\bin\win\%TARGET%
 set OUT_DIR=C:\Program Files\Mars
-if "%CONFIG%"=="debug" (
-	set CFLAGS=%CFLAGS% /DDEBUG
-	set OUT=%OUT%d
-) else (
-	set CFLAGS=%CFLAGS% /O2 /EHsc
-)
-
-:: Run build sequence
-echo Running build sequence...
-if not exist %BIN_DIR% mkdir %BIN_DIR%
-cl.exe /I%INC_DIR% %CFLAGS% /LD /Fo%CPATH%%OUT%.o %SRC_DIR%\libmars.c
-if not %ERRORLEVEL% == 0 (
-	echo Build failed!
-	goto End
-)
-if exist %CPATH%%OUT%.o del %CPATH%%OUT%.o
-if exist %CPATH%%OUT%.dll move %CPATH%%OUT%.* %BIN_DIR%
-
-:: Install
-echo Installing...
 if not exist "%OUT_DIR%\lib\%TARGET%" mkdir "%OUT_DIR%\lib\%TARGET%"
 if not exist "%OUT_DIR%\include" mkdir "%OUT_DIR%\include"
 copy "%BIN_DIR%\*" "%OUT_DIR%\lib\%TARGET%"
@@ -135,9 +93,8 @@ goto End
 
 :: Show syntax
 :ShowHelp
-echo build_win.bat [options]
+echo install_win.bat [options]
 echo  /A: Architecture {x86, x86, arm, arm64} (Default: host architecture)
-echo  /Db: Build with debug tools
 echo  /N: Do not wait for user input after process is done
 
 :End

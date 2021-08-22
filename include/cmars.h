@@ -27,7 +27,6 @@ typedef uint8_t (*fptr_t)(void*);					// Function pointer type with void* argume
 // Platform specific code
 #if defined(_WIN32)
 #include <Windows.h>
-#include <olectl.h>
 	// Mimic linux timeval struct
 	typedef struct {
 		long tv_sec;
@@ -75,6 +74,21 @@ MARS_API void component_transform_init(ComponentTransform* component);
 // Update all instances of this component
 MARS_API void component_transform_update(ComponentTransform* component, float dt);
 
+/*=======================================================*/
+/* Step Component                                        */
+/* Gives an entity a function call every game cycle      */
+/*=======================================================*/
+typedef struct {
+	uint32_t entity_id;		// Entity this component is bound to
+	fptr_t event;         // Function to perform on updating
+} ComponentStep;
+
+// Initialize component
+MARS_API void component_step_init(ComponentStep* component);
+
+// Update all instances of this component
+MARS_API void component_step_update(ComponentStep* component, float dt);
+
 
 /*=======================================================================================*/
 /* Systems                                                                               */
@@ -106,6 +120,31 @@ MARS_API void system_transform_update(SystemTransform* system, float dt);
 // Free all components in the system
 MARS_API void system_transform_free(SystemTransform* free);
 
+/*=======================================================*/
+/* Step System                                           */
+/* Advances all step components                          */
+/*=======================================================*/
+typedef struct {
+	ComponentStep *components;		// Dynamic list of all components
+	size_t size;									// Size of dynamic list
+	size_t num;										// Number of elements in the list
+} SystemStep;	// TODO use bst keyed with UUID instead of plain array
+
+// Initialize the given system
+MARS_API uint8_t system_step_init(SystemStep* system);
+
+// Add a component to the system bound to the given entity
+MARS_API uint8_t system_step_add_component(SystemStep* system, uint32_t id);
+
+// Returns a pointer to the component associated with the given UUID, or NULL if not found
+MARS_API ComponentStep* system_step_get_component(SystemStep* system, uint32_t id);
+
+// Update all components in the system
+MARS_API void system_step_update(SystemStep* system, float dt);
+
+// Free all components in the system
+MARS_API void system_step_free(SystemStep* free);
+
 
 /*=======================================================================================*/
 /* Engine                                                                                */
@@ -123,6 +162,7 @@ typedef struct {
 	float dt;													// Time (in seconds) that should pass between game cycles
 	bool run;													// Continue running the game loop
 	SystemTransform* sys_transform;		// System for managing Transform components
+  SystemStep* sys_step;		          // System for managing Step components
 } Engine;
 
 // Initializes the given Engine struct
