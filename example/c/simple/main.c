@@ -1,14 +1,10 @@
 /*
  *	main.c
- *	Example main loop to show what a game implementing this library would look like
+ *	Simple main loop to show what a game implementing this library would look like
  */
-#include "mars_common.h"
-#include "mars_engine.h"
-#include "mars_entity.h"
-#include "mars_component_transform.h"
-#include "mars_system_transform.h"
+#include "cmars.h"
 
-unsigned int myengine_init(void* arg) {
+uint8_t myengine_init(void* arg) {
 	// Validate argument
 	Engine* engine = (Engine*)arg;
 
@@ -30,7 +26,7 @@ unsigned int myengine_init(void* arg) {
 	}
 }
 
-unsigned int myengine_free(void* arg) {
+uint8_t myengine_free(void* arg) {
 	printf("Goodbye world!\n");
 	return 0;
 }
@@ -40,13 +36,13 @@ int main(void) {
 	Engine* myengine = malloc(sizeof(Engine));
 	if (myengine) {
 		myengine->on_init = myengine_init;
-		myengine->on_free = myengine_init;
+		myengine->on_free = myengine_free;
 
 		// Initialize game
 		engine_init(myengine);
 
 		// Update game
-		engine_update(myengine);
+		//engine_update(myengine);
 
 		// End game
 		engine_free(myengine);
