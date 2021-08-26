@@ -30,193 +30,190 @@
 /* Hash Tables                                                                           */
 /*=======================================================================================*/
 
-Hash* hash_create(void) {
-  // Allocate space for hash table struct
-  Hash* table = malloc(sizeof(Hash));
-  if (table == NULL) {
-    return NULL;
-  }
-  table->length = 0;
-  table->capacity = 16;
-
-  // Allocate (zero'd) space for entry buckets
-  table->entries = calloc(table->capacity, sizeof(HashEntry));
-  if (table->entries == NULL) {
-    free(table); // error, free table before we return!
-    return NULL;
-  }
-  return table;
+size_t hash_index(char* key) {
+	uint32_t hash = FNV_OFFSET;
+	for (char* p = key; *p; p++) {
+		hash ^= (uint32_t)(unsigned char)(*p);
+		hash *= FNV_PRIME;
+	}
+	return hash;
 }
 
-void hash_destroy(Hash* table) {
-  // First free allocated keys
-  for (size_t i = 0; i < table->capacity; i++) {
-    if (table->entries[i].key != NULL) {
-      free((void*)table->entries[i].key);
-    }
-  }
-
-  // Then free entries array and table itself
-  free(table->entries);
-  free(table);
+uint8_t hash_init(Hash* table) {
+	table->length = 0;
+	table->capacity = 8;
+	table->entries = NULL;
+	return hash_resize(table, table->capacity);
 }
 
-uint32_t hash_key(char* key) {
-  uint32_t hash = FNV_OFFSET;
-  for (char* p = key; *p; p++) {
-    hash ^= (uint32_t)(unsigned char)(*p);
-    hash *= FNV_PRIME;
-  }
-  return hash;
+uint8_t hash_resize(Hash* table, size_t new_capacity) {
+	// Allocate new memory block
+	if (new_capacity == 0) { return 1; }
+	HashEntry* new_entries = malloc(new_capacity * sizeof(HashEntry));
+	if (!new_entries) { return 1; }
+	for (size_t i = 0; i < new_capacity; ++i) {
+		new_entries[i].key = NULL;
+		new_entries[i].data = NULL;
+	}
+
+	// Rehash old entries
+	for (HashIt* it = hash_iterator(table); it; hash_next(&it)) {
+		// Get index
+		size_t index = hash_index(it->entry->key) % new_capacity;
+
+		// Find empty bucket
+		while (new_entries[index].key) {
+			if (strcmp(new_entries[index].key, it->entry->key) == 0) {
+				// Key already exists, overwrite data
+				table->entries[index].data = it->entry->data;
+				return 0;
+			}
+			else {
+				// Check next index
+				index = (index + 1) % new_capacity;
+			}
+		}
+
+		// Write data to bucket
+		new_entries[index].key = _strdup(it->entry->key);
+		new_entries[index].data = it->entry->data;
+	}
+
+	// Free old entries
+	for (HashIt* it = hash_iterator(table); it; hash_next(&it)) {
+		free(it->entry->key);
+	}
+	free(table->entries);
+	table->entries = new_entries;
+	table->capacity = new_capacity;
+
+	return 0;
+}
+
+void hash_free(Hash* table) {
+	for (HashIt* it = hash_iterator(table); it; hash_next(&it)) {
+		free(it->entry->key);
+	}
+	free(table->entries);
+	table->length = 0;
+	table->capacity = 0;
+	return;
+}
+
+uint8_t hash_add(Hash* table, char* key, void* data) {
+	// Expand if table is more than 3/4 full
+	if (table->length >= (table->capacity * 3) / 4) {
+		if (hash_resize(table, table->capacity * 2) == 1) {
+			return 1;
+		}
+	}
+
+	// Get index
+	size_t index = hash_index(key) % table->capacity;
+
+	// Find empty bucket
+	while (table->entries[index].key) {
+		if (strcmp(table->entries[index].key, key) == 0) {
+			// Key already exists, overwrite data
+			table->entries[index].data = data;
+			return 0;
+		}
+		else {
+			// Check next index
+			index = (index + 1) % table->capacity;
+		}
+	}
+
+	// Write data to bucket
+	table->entries[index].key = _strdup(key);
+	table->entries[index].data = data;
+	table->length++;
+	return 0;
 }
 
 void* hash_get(Hash* table, char* key) {
-  // AND hash with capacity-1 to ensure it's within entries array
-  uint32_t hash = hash_key(key);
-  size_t index = (size_t)(hash & (uint32_t)(table->capacity - 1));
+	// Get index
+	size_t index = hash_index(key) % table->capacity;
 
-  // Loop till we find an empty entry
-  while (table->entries[index].key != NULL) {
-    if (strcmp(key, table->entries[index].key) == 0) {
-      // Found key, return value
-      return table->entries[index].value;
-    }
-    // Key wasn't in this slot, move to next (linear probing)
-    index++;
-    if (index >= table->capacity) {
-      // At end of entries array, wrap around
-      index = 0;
-    }
-  }
-  return NULL;
+	// Find matching bucket
+	size_t count = 0;
+	while (count < table->capacity) {
+		if (table->entries[index].key && strcmp(table->entries[index].key, key) == 0) {
+			break;
+		}
+		else {
+			index = (index + 1) % table->capacity;
+			count++;
+		}
+	}
+
+	// Return what was found
+	if (count >= table->capacity) { return NULL; }
+	else { return table->entries[index].data; }
 }
 
-bool hash_remove(Hash* table, char* key) {
-  // AND hash with capacity-1 to ensure it's within entries array
-  uint32_t hash = hash_key(key);
-  size_t index = (size_t)(hash & (uint32_t)(table->capacity - 1));
+uint8_t hash_remove(Hash* table, char* key) {
+	// Get index
+	size_t index = hash_index(key);
 
-  // Loop till we find an empty entry
-  while (table->entries[index].key != NULL) {
-    if (strcmp(key, table->entries[index].key) == 0) {
-      // Found key, set to NULL
-      table->entries[index].key = NULL;
-      table->entries[index].value = NULL;
-      return true;
-    }
-    // Key wasn't in this slot, move to next (linear probing)
-    index++;
-    if (index >= table->capacity) {
-      // At end of entries array, wrap around
-      index = 0;
-    }
-  }
-  return false;
+	// Find matching bucket
+	size_t count = 0;
+	while (count < table->capacity) {
+		if (table->entries[index].key && strcmp(table->entries[index].key, key) == 0) {
+			break;
+		}
+		else {
+			index = (index + 1) % table->capacity;
+			count++;
+		}
+	}
+
+	// Empty the bucket
+	if (count >= table->capacity) { return 1; }
+	else { 
+		free(table->entries[index].key);
+		table->entries[index].key = NULL;
+		table->entries[index].data = NULL;
+		table->length--;
+		return 0;
+	}
 }
 
-char* hash_set_entry(HashEntry* entries, size_t capacity,
-  char* key, void* value, size_t* plength) {
-  // AND hash with capacity-1 to ensure it's within entries array
-  uint32_t hash = hash_key(key);
-  size_t index = (size_t)(hash & (uint32_t)(capacity - 1));
+HashIt* hash_iterator(Hash* table) {
+	if (table->length != 0) {
+		// Start before the first entry
+		HashIt* it = malloc(sizeof(HashIt));
+		if (it) {
+			it->table = table;
+			it->index = -1;
+			it->entry = NULL;
 
-  // Loop till we find an empty entry.
-  while (entries[index].key != NULL) {
-    if (strcmp(key, entries[index].key) == 0) {
-      // Found key (it already exists), update value
-      entries[index].value = value;
-      return entries[index].key;
-    }
-    // Key wasn't in this slot, move to next (linear probing)
-    index++;
-    if (index >= capacity) {
-      // At end of entries array, wrap around
-      index = 0;
-    }
-  }
-
-  // Didn't find key, allocate+copy if needed, then insert it
-  if (plength != NULL) {
-    key = strdup(key);
-    if (key == NULL) {
-        return NULL;
-    }
-    (*plength)++;
-  }
-  entries[index].key = (char*)key;
-  entries[index].value = value;
-  return key;
+			// Move to the first valid entry
+			hash_next(&it);
+			return it;
+		}
+	}
+	return NULL;
 }
 
-bool hash_expand(Hash* table) {
-  // Allocate new entries array.
-  size_t new_capacity = table->capacity * 2;
-  if (new_capacity < table->capacity) {
-    return false;  // overflow (capacity would be too big)
-  }
-  HashEntry* new_entries = calloc(new_capacity, sizeof(HashEntry));
-  if (new_entries == NULL) {
-    return false;
-  }
-
-  // Iterate entries, move all non-empty ones to new table's entries
-  for (size_t i = 0; i < table->capacity; i++) {
-    HashEntry entry = table->entries[i];
-    if (entry.key != NULL) {
-      hash_set_entry(new_entries, new_capacity, entry.key, entry.value, NULL);
-    }
-  }
-
-  // Free old entries array and update this table's details
-  free(table->entries);
-  table->entries = new_entries;
-  table->capacity = new_capacity;
-  return true;
-}
-
-char* hash_set(Hash* table, char* key, void* value) {
-  assert(value != NULL);
-  if (value == NULL) {
-    return NULL;
-  }
-
-  // If length will exceed 75% current capacity, expand it
-  if (table->length >= (table->capacity * 3) / 4) {
-    if (!hash_expand(table)) {
-      return NULL;
-    }
-  }
-
-  // Set entry and update length.
-  return hash_set_entry(table->entries, table->capacity, key, value, &table->length);
-}
-
-size_t hash_length(Hash* table) {
-  return table->length;
-}
-
-HashIt hash_iterator(Hash* table) {
-  HashIt it;
-  it._table = table;
-  it._index = 0;
-  return it;
-}
-
-bool hash_next(HashIt* it) {
-  // Loop till we've hit end of entries array
-  Hash* table = it->_table;
-  while (it->_index < table->capacity) {
-    size_t i = it->_index;
-    it->_index++;
-    if (table->entries[i].key != NULL) {
-      // Found next non-empty item, update iterator key and value
-      HashEntry entry = table->entries[i];
-      it->key = entry.key;
-      it->value = entry.value;
-      return true;
-    }
-  }
-  return false;
+uint8_t hash_next(HashIt** it) {
+	if (!(*it)) { return 1; }
+	else {
+		do {
+			// Move to next valid element until you reach the end
+			(*it)->index++;
+			(*it)->entry = &((*it)->table->entries[(*it)->index]);
+		} while ((*it)->index < (*it)->table->capacity && !((*it)->table->entries[(*it)->index].key));
+		if ((*it)->index >= (*it)->table->capacity) {
+			// Reached the end, no more valid entries
+			free(*it);
+			*it = NULL;
+			return 1;
+		}
+		else {
+			return 0;
+		}
+	}
 }
 
 
@@ -224,65 +221,12 @@ bool hash_next(HashIt* it) {
 /* Components                                                                            */
 /*=======================================================================================*/
 
-uint8_t component_init(Component* component) {
-  // Initialize component data
-  component->entity_id = NULL;
-  component->data = NULL;
-  component->init = NULL;
-  component->update = NULL;
-  component->free = NULL;
-  return 0;
-}
-
-uint8_t component_data_init(Component* component, int type) {
-  // TODO Arrange in a global hash
-  // Define component type
-  switch(type) {
-    case MARS_COMP_TRANSFORM: 
-      component->data = malloc(sizeof(ComponentTransform*));
-      component->init = component_transform_init;
-      component->update = component_transform_update;
-    break;
-    case MARS_COMP_STEP: 
-      component->data = malloc(sizeof(ComponentStep*));
-      component->init = component_step_init;
-      component->update = component_step_update;
-    break;
-  }
-  // Init component data
-  if (component->init) { 
-    void* args[] = {component->entity_id, component->data};
-    component->init(args, 2); 
-  }
-  return 0;
-}
-
-uint8_t component_update(Component* component, float dt) {
-  // Update component data
-  if (component->update) { 
-    void* args[] = {component->entity_id, component->data, &dt};
-    component->update(args, 3); 
-  }
-  return 0;
-}
-
-uint8_t component_free(Component* component) {
-  // Free component data
-  if (component->free) { 
-    void* args[] = {component->entity_id, component->data};
-    component->free(args, 2); 
-  }
-  // Free base component values
-  if (component->data) { free(component->data); }
-  return 0;
-}
-
 /*=======================================================*/
 /* Transform Component                                   */
 /*=======================================================*/
 uint8_t component_transform_init(void** args, size_t num) {
   // Get reference
-  ComponentTransform *data = (ComponentTransform*)args[1];
+  ComponentTransform *data = (ComponentTransform*)args[0];
   // Set values
 	data->x = 0.0f;
 	data->y = 0.0f;
@@ -294,8 +238,9 @@ uint8_t component_transform_init(void** args, size_t num) {
 
 uint8_t component_transform_update(void** args, size_t num) {
   // Get reference
-  ComponentTransform *data = (ComponentTransform*)args[1];
-  float dt = *((float*)args[2]);
+  ComponentTransform *data = (ComponentTransform*)args[0];
+  char* entity_id = (char*)args[1];
+  float dt = *((float*)args[1]);
 	// Verlet integration
 	float _x_ = data->x;
 	float _y_ = data->y;
@@ -311,7 +256,7 @@ uint8_t component_transform_update(void** args, size_t num) {
 /*=======================================================*/
 uint8_t component_step_init(void** args, size_t num) {
   // Get reference
-  ComponentStep *data = (ComponentStep*)args[1];
+  ComponentStep *data = (ComponentStep*)args[0];
   // Set values
   data->event = NULL;
   return 0;
@@ -319,8 +264,8 @@ uint8_t component_step_init(void** args, size_t num) {
 
 uint8_t component_step_update(void** args, size_t num) {
   // Get reference
-  char* entity_id = (char*)args[0];
-  ComponentStep *data = (ComponentStep*)args[1];
+  ComponentStep *data = (ComponentStep*)args[0];
+  char* entity_id = (char*)args[1];
   float dt = *((float*)args[2]);
 	// Perform event
   if (data->event) { 
@@ -337,55 +282,61 @@ uint8_t component_step_update(void** args, size_t num) {
 
 uint8_t system_init(System* system) {
   // Initialize values
-  system->num_components = 0;
-  system->size_components = 8;
-  system->type = -1;
-  system->components = calloc(system->size_components, sizeof(Component*));
-  // TODO allocate space for components and their data types side-by-side
+  system->components = malloc(sizeof(Hash));
+  hash_init(system->components);
+  system->uuid = calloc((2*UUID_BYTES)+1, sizeof(char));
+  uuid_generate(system->uuid);
+  system->data_size = 0;
+  system->init = NULL;
+  system->update = NULL;
+  system->free = NULL;
   return 0;
 }
 
-Component* system_add_component(System* system, char* id) {
-  // Allocate more memory if needed
-  while (system->num_components >= system->size_components) {
-    system->size_components *= 2;
-    system->components = realloc(system->components, system->size_components*sizeof(Component*));
+uint8_t system_init_component(System* system, void* component) {
+  if (system->init) { 
+    void* args[] = {component};
+    system->init(args, 1); 
   }
-  
-  // Initialize new component
-  Component* component = &system->components[system->num_components];
-  system->num_components++;
-  component_init(component);
-  component->entity_id = id;
-
-  // Assign component data
-  component_data_init(component, system->type);
-
-  return component;
+  return 0;
 }
 
-Component* system_get_component(System* system, char* id) {
-  for(size_t i=0; i<system->num_components; ++i) { // TODO save components as hash
-    if (strcmp(system->components[i].entity_id, id) == 0) {
-      return &system->components[i];
-    }
-  }
-  return NULL;
+uint8_t system_add_component(System* system, char* entity_id, void* component) {
+  hash_add(system->components, entity_id, component);
+  return 0;
+}
+
+void* system_get_component(System* system, char* entity_id) {
+  return hash_get(system->components, entity_id);
 }
 
 uint8_t system_update(System* system, float dt) {
-  for(size_t i=0; i<system->num_components; ++i) {
-    component_update(&system->components[i], dt);
+  if (system->update) {
+    for (HashIt* it = hash_iterator(system->components); it; hash_next(&it)) {
+      if (it->entry->key) {
+        void* args[] = {it->entry->data, it->entry->key, &dt};
+        system->update(args, 3);
+      }
+    }
   }
   return 0;
 }
 
 uint8_t system_free(System* system) {
-  // Free components
-  for(size_t i=0; i<system->num_components; ++i) {
-    component_free(&system->components[i]);
+  // User defined component free
+  if (system->free) {
+    for (HashIt* it = hash_iterator(system->components); it; hash_next(&it)) {
+      if (it->entry->key) {
+        void* args[] = {it->entry->data};
+        system->free(args, 1);
+      }
+    }
   }
+  // Destroy components
+  hash_free(system->components);
   free(system->components);
+  // Destroy system elements
+  free(system->uuid);
   return 0;
 }
 
@@ -401,10 +352,10 @@ uint8_t engine_init(Engine* engine) {
 	engine->render_alpha = 0.0f;
 	engine->dt = 0.0f;
 	engine->run = true;
-  engine->num_systems = 0;
-  engine->size_systems = 8;
-  engine->systems = calloc(engine->size_systems, sizeof(System*));
-  engine->entities = hash_create();
+  engine->systems = malloc(sizeof(Hash));
+  hash_init(engine->systems);
+  engine->entities = malloc(sizeof(Hash));
+  hash_init(engine->entities);
 
 	// Get current time
 	gettimeofday(&(engine->old_time), 0);
@@ -427,8 +378,10 @@ uint8_t engine_update(Engine* engine) {
 		// Consume frame time in discrete dt-sized bits
 		while (engine->time_accum >= engine->dt) {
 			// Update systems
-      for(size_t i=0; i<engine->num_systems; ++i) {
-        system_update(&engine->systems[i], engine->dt);
+      for (HashIt* it = hash_iterator(engine->systems); it; hash_next(&it)) {
+        if (it->entry->key) {
+          system_update((System*)it->entry->data, engine->dt);
+        }
       }
 
 			// Reduce remaining time
@@ -444,41 +397,31 @@ uint8_t engine_update(Engine* engine) {
 	return 0;
 }
 
-System* engine_add_system(Engine* engine, int type) {
-  // Allocate more memory if needed
-  while (engine->num_systems >= engine->size_systems) {
-    engine->size_systems *= 2;
-    engine->systems = realloc(engine->systems, engine->size_systems*sizeof(System*));
-  }
-  
-  // Initialize new system
-  System* system = &engine->systems[engine->num_systems];
-  engine->num_systems++;
-  system_init(system);
-  
-  // Set system properties
-  system->type = type;
-
-  return system;
+uint8_t engine_add_system(Engine* engine, char* system_id, System* system) {
+  hash_add(engine->systems, system_id, (void*)system);
+  return 0;
 }
 
-System* engine_get_system(Engine* engine, int type) {
-  for(size_t i=0; i<engine->num_systems; ++i) { // TODO save system as hash(?)
-    if (engine->systems[i].type == type) {
-      return &engine->systems[i];
-    }
-  }
-  return NULL;
+System* engine_get_system(Engine* engine, char* system_id) {
+  return (System*)hash_get(engine->systems, system_id);
 }
 
 uint8_t engine_free(Engine* engine) {
+  // User defined engine free
   void* args[] = {engine};
 	if (engine->on_free) { engine->on_free(args, 1); }
-  for(size_t i=0; i<engine->num_systems; ++i) {
-    system_free(&engine->systems[i]);
+  // Destroy entities
+  hash_free(engine->entities);
+  free(engine->entities);
+  // User defined system free
+  for (HashIt* it = hash_iterator(engine->systems); it; hash_next(&it)) {
+    if (it->entry->key) {
+      system_free(it->entry->data);
+    }
   }
+  // Destroy systems
+  hash_free(engine->systems);
   free(engine->systems);
-  hash_destroy(engine->entities);
 	return 0;
 }
 
@@ -512,22 +455,22 @@ void uuid_generate(char* uuid) {
   return;
 }
 
-Entity* create_entity(Engine* engine) {
+Entity* entity_create(Engine* engine) {
 	Entity* new_entity = malloc(sizeof(Entity));
   new_entity->uuid = calloc((2*UUID_BYTES)+1, sizeof(char));
 	uuid_generate(new_entity->uuid);
-  hash_set(engine->entities, new_entity->uuid, new_entity);
+  hash_add(engine->entities, new_entity->uuid, (void*)new_entity);
 	return new_entity;
 }
 
-Entity* get_entity(Engine* engine, char* id) {
-  return hash_get(engine->entities, id);
+Entity* entity_get(Engine* engine, char* entity_id) {
+  return (Entity*)hash_get(engine->entities, entity_id);
 }
 
-Component* get_entity_component(Engine* engine, char* id, int type) {
-  System* system = engine_get_system(engine, type);
+void* entity_get_component(Engine* engine, char* system_id, char* entity_id) {
+  System* system = engine_get_system(engine, system_id);
   if (system) {
-    Component* component = system_get_component(system, id);
+    void* component = system_get_component(system, entity_id);
     if (component) {
       return component;
     }
@@ -535,7 +478,7 @@ Component* get_entity_component(Engine* engine, char* id, int type) {
   return NULL;
 }
 
-uint8_t destroy_entity(Engine* engine, Entity* entity) {
+uint8_t entity_destroy(Engine* engine, Entity* entity) {
   if (entity) {
     free(entity->uuid);
     free(entity); 

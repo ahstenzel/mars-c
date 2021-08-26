@@ -88,8 +88,8 @@ void rng_seed(uint32_t seed) {
 /* Key value pair stored in the table                    */
 /*=======================================================*/
 typedef struct {
-		char* key;    // Key is NULL if this slot is empty
-		void* value;
+	char* key;
+	void* data;
 } HashEntry;
 
 /*=======================================================*/
@@ -97,86 +97,60 @@ typedef struct {
 /* Overall container for hash entries                    */
 /*=======================================================*/
 typedef struct {
-	HashEntry* entries;   // Hash slots
-	size_t capacity;      // Size of internal array
-	size_t length;        // Number of entries in the table
+	HashEntry* entries;
+	size_t length;
+	size_t capacity;
 } Hash;
-
-// Create hash table and return pointer to it, or NULL if out of memory
-MARS_API Hash* hash_create(void);
-
-// Free memory allocated for hash table, including allocated keys
-MARS_API void hash_destroy(Hash* table);
-
-// Return 64-bit FNV-1a hash for key (NUL-terminated)
-MARS_API uint32_t hash_key(char* key);
-
-// Get item with given key (NUL-terminated) from hash table, or NULL
-MARS_API void* hash_get(Hash* table, char* key);
-
-// Remove item with given key (NUL-terminated) from hash table
-MARS_API bool hash_remove(Hash* table, char* key);
-
-// Internal function to set an entry (without expanding table).
-MARS_API char* hash_set_entry(HashEntry* entries, size_t capacity, char* key, 
-	void* value, size_t* plength);
-
-// Expand hash table to twice its current size
-MARS_API bool hash_expand(Hash* table);
-
-// Add item with given key (NUL-terminated) to value
-MARS_API char* hash_set(Hash* table, char* key, void* value);
-
-// Get number of items in hash table
-MARS_API size_t hash_length(Hash* table);
 
 /*=======================================================*/
 /* Hash Iterator                                         */
-/* Used for iterating over an entire table               */
+/* Used for iterating over all elements in a table       */
 /*=======================================================*/
 typedef struct {
-	char* key;    	// Current key
-	void* value;        	// Current value
-
-	// Don't use these fields directly.
-	Hash* _table;       	// reference to hash table being iterated
-	size_t _index;      	// current index into Hash._entries
+	Hash* table;
+	size_t index;
+	HashEntry* entry;
 } HashIt;
 
-// Create new hash table iterator
-MARS_API HashIt hash_iterator(Hash* table);
+// Calculate hash index from key
+MARS_API size_t hash_index(char* key);
 
-// Move iterator to next item in hash table
-MARS_API bool hash_next(HashIt* it);
+// Initialize hash table
+MARS_API uint8_t hash_init(Hash* table);
+
+// Resize hash table
+MARS_API uint8_t hash_resize(Hash* table, size_t new_size);
+
+// Free memory associatetd with the hash table
+MARS_API void hash_free(Hash* table);
+
+// Add element to the hash table
+MARS_API uint8_t hash_add(Hash* table, char* key, void* data);
+
+// Get element from hash table
+MARS_API void* hash_get(Hash* table, char* key);
+
+// Remove element from hash table
+MARS_API uint8_t hash_remove(Hash* table, char* key);
+
+// Create hash iterator
+MARS_API HashIt* hash_iterator(Hash* table);
+
+// Increment hash iterator
+MARS_API uint8_t hash_next(HashIt** it);
 
 
 /*=======================================================================================*/
 /* Components                                                                            */
 /* Structs that give entities certain properties or functionality                        */
 /*=======================================================================================*/
-typedef struct {
-	char* entity_id;  // Entity this component is bound to
-	void *data;             // Data held by this component
-	fptr_t init;            // Function run on initialization
-	fptr_t update;          // Function run on update every game cycle
-	fptr_t free;            // Function run on freeing component
-} Component;
-
-MARS_API uint8_t component_init(Component* component);
-
-MARS_API uint8_t component_data_init(Component* component, int type);
-
-MARS_API uint8_t component_update(Component* component, float dt);
-
-MARS_API uint8_t component_free(Component* component);
 
 /*=======================================================*/
 /* Transform Component                                   */
 /* Gives an entity position and movement                 */
 /*=======================================================*/
-#define MARS_COMP_TRANSFORM 0
-
 typedef struct {
+  char* entity_id;      // Entity this component is bound to
 	float x, y;						// Current position
 	float l_x, l_y;				// Previous position
 	float acc;						// Acceleration
@@ -192,10 +166,9 @@ MARS_API uint8_t component_transform_update(void** args, size_t num);
 /* Step Component                                        */
 /* Gives an entity a function call every game cycle      */
 /*=======================================================*/
-#define MARS_COMP_STEP 1
-
 typedef struct {
-	fptr_t event;
+  char* entity_id;      // Entity this component is bound to
+	fptr_t event;         // Function to execute
 } ComponentStep;
 
 // Initialize component
@@ -209,22 +182,31 @@ MARS_API uint8_t component_step_update(void** args, size_t num);
 /* Systems                                                                               */
 /* Structs that manage a collection of componenets                                       */
 /*=======================================================================================*/
-
 typedef struct {
-	Component *components;
-	size_t size_components;
-	size_t num_components;
-	int type;
+  char* uuid;               // Unique ID
+  Hash* components;         // Hash table containing all components
+  size_t data_size;         // Size of component data struct
+  fptr_t init;              // Function to run when initializing component
+  fptr_t update;            // Function to run when updating component
+  fptr_t free;              // Function to run when freeing component
 } System;
 
+// Initialize system
 MARS_API uint8_t system_init(System* system);
 
-MARS_API Component* system_add_component(System* system, char* id);
+// Initialize a component with the given system
+MARS_API uint8_t system_init_component(System* system, void* component);
 
-MARS_API Component* system_get_component(System* system, char* id);
+// Add component to the system for the given entity
+MARS_API uint8_t system_add_component(System* system, char* entity_id, void* component);
 
+// Get the component bound to the given entity
+MARS_API void* system_get_component(System* system, char* entity_id);
+
+// Update all components under this system
 MARS_API uint8_t system_update(System* system, float dt);
 
+// Free all memory for this system
 MARS_API uint8_t system_free(System* system);
 
 
@@ -243,9 +225,7 @@ typedef struct {
 	float render_alpha;								// Scalar for frame interpolation
 	float dt;													// Time (in seconds) that should pass between game cycles
 	bool run;													// Continue running the game loop
-	System* systems;                  // Systems to update
-	size_t size_systems;              // Size of systems array
-	size_t num_systems;               // Number of systems
+	Hash* systems;                    // Hash table containing all systems
 	Hash* entities;										// Hash table containing all entities
 } Engine;
 
@@ -256,10 +236,10 @@ MARS_API uint8_t engine_init(Engine* engine);
 MARS_API uint8_t engine_update(Engine* engine);
 
 // Add a new system to the engine
-MARS_API System* engine_add_system(Engine* engine, int type);
+MARS_API uint8_t engine_add_system(Engine* engine, char* system_id, System* system);
 
 // Get a pointer to the given system
-MARS_API System* engine_get_system(Engine* engine, int type);
+MARS_API System* engine_get_system(Engine* engine, char* system_id);
 
 // Frees the modules associated with the given Engine struct
 MARS_API uint8_t engine_free(Engine* engine);
@@ -270,7 +250,7 @@ MARS_API uint8_t engine_free(Engine* engine);
 /* Basic game object. Has a unique ID that is used to link it to components.             */
 /*=======================================================================================*/
 typedef struct {
-	char* uuid;		  // Unique entity ID
+	char* uuid;		        // Unique entity ID
 } Entity;
 
 #define UUID_BYTES 8    // Number of bytes in a UUID string
@@ -279,15 +259,15 @@ typedef struct {
 MARS_API void uuid_generate(char* uuid);
 
 // Allocate an entity struct and assign it an ID
-MARS_API Entity* create_entity(Engine* engine);
+MARS_API Entity* entity_create(Engine* engine);
 
 // Get a reference to the entity with the given ID
-MARS_API Entity* get_entity(Engine* engine, char* id);
+MARS_API Entity* entity_get(Engine* engine, char* entity_id);
 
 // Get the component type for the entity with the given ID
-MARS_API Component* get_entity_component(Engine* engine, char* id, int type);
+MARS_API void* entity_get_component(Engine* engine, char* system_id, char* entity_id);
 
 // Free the resources associated with the given entity
-MARS_API uint8_t destroy_entity(Engine* engine, Entity* entity);
+MARS_API uint8_t entity_destroy(Engine* engine, Entity* entity);
 
 #endif
