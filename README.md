@@ -1,2 +1,2 @@
 # mars
-Platform agnostic game creation library with bindings for many languages.
+Platform agnostic game creation library. Written in C with bindings for many languages.
