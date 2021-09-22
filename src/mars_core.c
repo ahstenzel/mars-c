@@ -1,5 +1,4 @@
-#define MARS_EXPORTS
-#include "mars_core.h"
+#include "mars/mars_core.h"
 
 /*=======================================================*/
 /* Definitions                                           */
@@ -61,11 +60,6 @@ System* system_create(size_t component_size, fptr_t init, fptr_t update, fptr_t 
     return NULL;
   }
 
-  // Run function
-  if (init) {
-    void* data[] = {system};
-    init(1, data);
-  }
   return system;
 }
 
@@ -73,8 +67,14 @@ uint8_t system_add_component(System* system, id_t uuid, void* component) {
   // Error check
   if (!system) { return 1; }
 
+  // Run function
+  if (system->init) {
+    void* args[] = {component};
+    system->init(1, args);
+  }
+
   // Attemp to insert
-  return __umap_insert(system->components, uuid, component);
+  return unordered_map_insert(system->components, uuid, component);
 }
 
 void* system_get_component(System* system, id_t uuid) {
@@ -85,19 +85,33 @@ void* system_get_component(System* system, id_t uuid) {
   return unordered_map_find(system->components, uuid);
 }
 
-void system_update(System* system) {
+void system_update(System* system, float* dt) {
   // Error check
   if (!system) { return; }
 
   // Iterate through components
+  if (system->update) {
+    for(umap_it_t* it = unordered_map_it(system->components); it; unordered_map_it_next(it)) {
+      void* args[] = {it->data, dt};
+      system->update(2, args);
+    }
+  }
 }
 
 void system_destroy(System* system) {
   if (system) {
     // Iterate through components
+    if (system->destroy) {
+      for(umap_it_t* it = unordered_map_it(system->components); it; unordered_map_it_next(it)) {
+        void* args[] = {it->data};
+        system->destroy(1, args);
+      }
+    }
+
     // Destroy component map
     unordered_map_destroy(system->components);
   }
+
   // Destroy struct
   free(system);
 }
@@ -119,8 +133,8 @@ Engine* engine_create(fptr_t init, fptr_t destroy) {
   engine->render_alpha = 0.0f;
   engine->dt = 0.01f;
   engine->run = true;
-  unordered_map_create(engine->systems, System);
-  unordered_map_create(engine->entities, Entity);
+  engine->systems = unordered_map_create(System);
+  engine->entities = unordered_map_create(Entity);
 
   // Error check
   if (!engine->systems || !engine->entities) {
@@ -130,9 +144,11 @@ Engine* engine_create(fptr_t init, fptr_t destroy) {
 
   // Run function
   if (init) {
-    void* data[] = {engine};
-    init(1, data);
+    void* args[] = {engine};
+    init(1, args);
   }
+
+  return engine;
 }
 
 uint8_t engine_add_system(Engine* engine, id_t uuid, System* system) {
@@ -140,7 +156,7 @@ uint8_t engine_add_system(Engine* engine, id_t uuid, System* system) {
   if (!engine) { return 1; }
 
   // Attempt to insert
-  return __umap_insert(engine->systems, uuid, system);
+  return unordered_map_insert(engine->systems, uuid, system);
 }
 
 System* engine_get_system(Engine* engine, id_t uuid) {
@@ -156,7 +172,7 @@ uint8_t engine_add_entity(Engine* engine, id_t uuid, Entity* entity) {
   if (!engine) { return 1; }
 
   // Attempt to insert
-  return __umap_insert(engine->entities, uuid, entity);
+  return unordered_map_insert(engine->entities, uuid, entity);
 }
 
 Entity* engine_get_entity(Engine* engine, id_t uuid) {
@@ -168,17 +184,52 @@ Entity* engine_get_entity(Engine* engine, id_t uuid) {
 }
 
 void engine_update(Engine* engine) {
-  // Error check
-  if (!engine) { return NULL; }
+  while(engine->run) {
+    // Get frame time
+    gettimeofday(&(engine->new_time), 0);
+    long int sec = engine->new_time.tv_sec - engine->old_time.tv_sec;
+    long int usec = engine->new_time.tv_usec - engine->old_time.tv_usec;
+    engine->time_accum += sec+(usec*0.000001f);
+    engine->old_time = engine->new_time;
 
+    // Consume frame time in discrete dt-sized bits
+    while (engine->time_accum >= engine->dt) {
+      // Update systems
+      for(umap_it_t* it = unordered_map_it(engine->systems); it; unordered_map_it_next(it)) {
+        system_update((System*)it->data, &engine->dt);
+      }
+
+      // Reduce remaining time
+      engine->time_accum -= engine->dt;
+    }
+
+    // Normalize remaining time
+    engine->render_alpha = engine->time_accum / engine->dt;
+
+    // Update renderer state
+    // TODO
+  }
 }
 
 void engine_destroy(Engine* engine) {
   if (engine) {
     // Iterate through systems
+    for(umap_it_t* it = unordered_map_it(engine->systems); it; unordered_map_it_next(it)) {
+      system_destroy((System*)it->data);
+    }
+
     // Destroy system map
     unordered_map_destroy(engine->systems);
+
+    // Iterate through entities
+    for(umap_it_t* it = unordered_map_it(engine->entities); it; unordered_map_it_next(it)) {
+      entity_destroy((Entity*)it->data);
+    }
+
+    // Destroy entity map
+    unordered_map_destroy(engine->entities);
   }
+
   // Destroy struct
   free(engine);
 }

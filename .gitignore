@@ -19,8 +19,26 @@
 *.dSYM/
 *.su
 *.idb
-*.pdb
 
 # Visual Studio files
 .vs/
 .vscode/
+
+# Cmake files
+build-shared
+build-static
+.cmake
+CPack*
+CMakeFiles
+CMakeScripts
+CMakeCache.txt
+Testing
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+CTestTestfile.cmake
+_deps
+*.vcxproj*
+*.sln
+*.tlog
+*.recipe

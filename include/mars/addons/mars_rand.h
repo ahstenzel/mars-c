@@ -7,7 +7,7 @@
 #define MARS_RAND_H
 
 // Includes
-#include "../mars_core.h"
+#include <stdint.h>
 
 // Defines
 #define MARS_RNG_MWC

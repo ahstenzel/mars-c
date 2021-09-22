@@ -10,3 +10,5 @@
 #include "mars_core.h"
 
 // Built-in components
+#include "components/mars_component_transform.h"
+#include "components/mars_component_step.h"
