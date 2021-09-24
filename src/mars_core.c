@@ -1,3 +1,6 @@
+#ifndef MARS_EXPORTS
+  #define MARS_EXPORTS
+#endif
 #include "mars/mars_core.h"
 
 /*=======================================================*/
@@ -6,6 +9,9 @@
 #ifndef MARS_RAND_H
   #define RAND rand()
   #define RAND_SEED(s) srand(s)
+#endif
+#ifndef NDEBUG
+  uint8_t __mars_verbosity;
 #endif
 
 
@@ -36,7 +42,17 @@
 /* Global functions                                      */
 /*=======================================================*/
 id_t uuid_generate() {
-  return (id_t)(RAND);
+  return (id_t)(RAND & (ID_NULL - 1));
+}
+
+void mars_log(uint8_t level, const char* format, ...) {
+  #ifndef NDEBUG
+    if (level & __mars_verbosity) {
+      va_list args;
+      va_start(args, format);
+      vprintf(format, args);
+    }
+  #endif
 }
 
 
@@ -47,52 +63,77 @@ id_t uuid_generate() {
 System* system_create(size_t component_size, fptr_t init, fptr_t update, fptr_t destroy) {
   // Assign default values
   System* system = malloc(sizeof(*system));
-  if (!system) { return NULL; }
-  system->components = __umap_factory(component_size, __UMAP_DEFAULT_CAPACITY);
+  if (!system) { 
+    mars_log(MARS_VERB_ERROR, "[system_create] malloc failed!\n");
+    return NULL; 
+  }
+  system->components = unordered_map_create(void*);
+  if (!system->components) {
+    mars_log(MARS_VERB_ERROR, "[system_create] Failed to create component map!\n");
+    free(system);
+    return NULL;
+  }
   system->init = init;
   system->update = update;
   system->destroy = destroy;
   system->uuid = uuid_generate();
-  
-  // Error check
-  if (!system->components) {
-    free(system);
-    return NULL;
-  }
+  system->component_size = component_size;
 
   return system;
 }
 
-uint8_t system_add_component(System* system, id_t uuid, void* component) {
+uint8_t system_new_component(System* system, id_t entity_id) {
+  // Error check
+  if (!system) { return 1; }
+  
+  // Allocate space for component
+  void* component = malloc(system->component_size);
+  if (!component) { return 1; }
+
+  // Run init function
+  if (system->init) {
+    void* args[] = {component, &entity_id};
+    system->init(2, args);
+  }
+
+  // Attempt to insert
+  return unordered_map_insert(system->components, entity_id, &component);
+}
+
+uint8_t system_add_component(System* system, id_t entity_id, void* component) {
   // Error check
   if (!system) { return 1; }
 
   // Run function
   if (system->init) {
-    void* args[] = {component};
-    system->init(1, args);
+    void* args[] = {component, &entity_id};
+    system->init(2, args);
   }
 
   // Attemp to insert
-  return unordered_map_insert(system->components, uuid, component);
+  return unordered_map_insert(system->components, entity_id, &component);
 }
 
-void* system_get_component(System* system, id_t uuid) {
+void* system_get_component(System* system, id_t entity_id) {
   // Error check
   if (!system) { return NULL; }
 
   // Attempt to find
-  return unordered_map_find(system->components, uuid);
+  void** data = unordered_map_find(system->components, entity_id);
+  return (data) ? (*data) : NULL;
 }
 
 void system_update(System* system, float* dt) {
   // Error check
-  if (!system) { return; }
+  if (!system) { 
+    mars_log(MARS_VERB_ERROR, "[system_update] System reference NULL!\n");
+    return; 
+  }
 
   // Iterate through components
   if (system->update) {
     for(umap_it_t* it = unordered_map_it(system->components); it; unordered_map_it_next(it)) {
-      void* args[] = {it->data, dt};
+      void* args[] = {*(void**)(it->data), dt};
       system->update(2, args);
     }
   }
@@ -103,8 +144,15 @@ void system_destroy(System* system) {
     // Iterate through components
     if (system->destroy) {
       for(umap_it_t* it = unordered_map_it(system->components); it; unordered_map_it_next(it)) {
-        void* args[] = {it->data};
+        // Get double reference
+        void** data = it->data;
+        
+        // Run destroy function
+        void* args[] = {*data};
         system->destroy(1, args);
+
+        // Destroy base object
+        free(*data);
       }
     }
 
@@ -121,7 +169,7 @@ void system_destroy(System* system) {
 /* Engine                                                */
 /*=======================================================*/
 
-Engine* engine_create(fptr_t init, fptr_t destroy) {
+Engine* engine_create(fptr_t init, fptr_t destroy, int argc, char** argv) {
   // Assign default values
   Engine* engine = malloc(sizeof(*engine));
   if (!engine) { return NULL; }
@@ -133,8 +181,8 @@ Engine* engine_create(fptr_t init, fptr_t destroy) {
   engine->render_alpha = 0.0f;
   engine->dt = 0.01f;
   engine->run = true;
-  engine->systems = unordered_map_create(System);
-  engine->entities = unordered_map_create(Entity);
+  engine->systems = unordered_map_create(System*);
+  engine->entities = unordered_map_create(Entity*);
 
   // Error check
   if (!engine->systems || !engine->entities) {
@@ -142,21 +190,61 @@ Engine* engine_create(fptr_t init, fptr_t destroy) {
     return NULL;
   }
 
+  // Get current time
+	gettimeofday(&(engine->old_time), 0);
+
+  // Process command line flags
+  #ifndef NDEBUG
+    __mars_verbosity = 0;
+    for (size_t optind = 1; optind < argc && argv[optind][0] == '-'; ++optind) {
+      switch (argv[optind][1]) {
+        case 'v':   // Verbosity flags
+          if (optind < (argc - 1)) {
+            __mars_verbosity = atoi(argv[optind + 1]);
+          }
+        break;
+      }
+    }
+  #endif
+
   // Run function
   if (init) {
-    void* args[] = {engine};
+    void* args[] = { engine };
     init(1, args);
   }
 
   return engine;
 }
 
-uint8_t engine_add_system(Engine* engine, id_t uuid, System* system) {
+id_t engine_new_system(Engine* engine, size_t component_size, fptr_t init, fptr_t update, fptr_t destroy) {
+  // Error check
+  if (!engine) { 
+    mars_log(MARS_VERB_ERROR, "[engine_new_system] Engine reference NULL!\n");
+    return ID_NULL; 
+  }
+
+  // Allocate space for system
+  System* system = system_create(component_size, init, update, destroy);
+  if (!system) { 
+    mars_log(MARS_VERB_ERROR, "[engine_new_system] Failed to create system!\n");
+    return ID_NULL; 
+  }
+
+  // Attempt to insert
+  uint8_t result = unordered_map_insert(engine->systems, system->uuid, &system);
+  if (result > 0) { 
+    mars_log(MARS_VERB_ERROR, "[engine_new_system] Insert failed!\n"); 
+    return ID_NULL;
+  }
+  return system->uuid;
+}
+
+uint8_t engine_add_system(Engine* engine, System* system) {
   // Error check
   if (!engine) { return 1; }
 
   // Attempt to insert
-  return unordered_map_insert(engine->systems, uuid, system);
+  return unordered_map_insert(engine->systems, system->uuid, &system);
 }
 
 System* engine_get_system(Engine* engine, id_t uuid) {
@@ -164,15 +252,28 @@ System* engine_get_system(Engine* engine, id_t uuid) {
   if (!engine) { return NULL; }
 
   // Attempt to find
-  return (System*)unordered_map_find(engine->systems, uuid);
+  void** data = unordered_map_find(engine->systems, uuid);
+  return (data) ? (System*)(*data) : NULL;
 }
 
-uint8_t engine_add_entity(Engine* engine, id_t uuid, Entity* entity) {
+id_t engine_new_entity(Engine* engine) {
+  if (!engine) { return ID_NULL; }
+
+  // Allocate space for entity
+  Entity* entity = entity_create();
+  if (!entity) { return ID_NULL; }
+
+  // Attempt to insert
+  uint8_t result = unordered_map_insert(engine->entities, entity->uuid, &entity);
+  return (result > 0) ? ID_NULL : entity->uuid;
+}
+
+uint8_t engine_add_entity(Engine* engine, Entity* entity) {
   // Error check
   if (!engine) { return 1; }
 
   // Attempt to insert
-  return unordered_map_insert(engine->entities, uuid, entity);
+  return unordered_map_insert(engine->entities, entity->uuid, &entity);
 }
 
 Entity* engine_get_entity(Engine* engine, id_t uuid) {
@@ -180,7 +281,32 @@ Entity* engine_get_entity(Engine* engine, id_t uuid) {
   if (!engine) { return NULL; }
 
   // Attempt to find
-  return (Entity*)unordered_map_find(engine->entities, uuid);
+  void** data = unordered_map_find(engine->entities, uuid);
+  return (data) ? (Entity*)(*data) : NULL;
+}
+
+uint8_t engine_new_entity_component(Engine* engine, id_t system_id, id_t entity_id) {
+  // Error check
+  if (!engine) { return 1; }
+
+  // Get system
+  System* system = engine_get_system(engine, system_id);
+  if (!system) { return 1; }
+
+  // Create component in system for entity
+  return system_new_component(system, entity_id);
+}
+
+void* engine_get_entity_component(Engine* engine, id_t system_id, id_t entity_id) {
+  // Error check
+  if (!engine) { return NULL; }
+
+  // Get system
+  System* system = engine_get_system(engine, system_id);
+  if (!system) { return NULL; }
+
+  // Create component in system for entity
+  return system_get_component(system, entity_id);
 }
 
 void engine_update(Engine* engine) {
@@ -196,7 +322,7 @@ void engine_update(Engine* engine) {
     while (engine->time_accum >= engine->dt) {
       // Update systems
       for(umap_it_t* it = unordered_map_it(engine->systems); it; unordered_map_it_next(it)) {
-        system_update((System*)it->data, &engine->dt);
+        system_update(*(System**)(it->data), &(engine->dt));
       }
 
       // Reduce remaining time
@@ -215,7 +341,7 @@ void engine_destroy(Engine* engine) {
   if (engine) {
     // Iterate through systems
     for(umap_it_t* it = unordered_map_it(engine->systems); it; unordered_map_it_next(it)) {
-      system_destroy((System*)it->data);
+      system_destroy(*(System**)it->data);
     }
 
     // Destroy system map
@@ -223,7 +349,7 @@ void engine_destroy(Engine* engine) {
 
     // Iterate through entities
     for(umap_it_t* it = unordered_map_it(engine->entities); it; unordered_map_it_next(it)) {
-      entity_destroy((Entity*)it->data);
+      entity_destroy(*(Entity**)it->data);
     }
 
     // Destroy entity map

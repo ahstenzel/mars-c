@@ -1,9 +1,14 @@
+#ifndef MARS_EXPORTS
+  #define MARS_EXPORTS
+#endif
 #include "mars/components/mars_component_step.h"
 
 uint8_t component_step_init(size_t num, void** args) {
   // Get reference
   ComponentStep *data = (ComponentStep*)args[0];
+  id_t uuid = *(id_t*)args[1];
   // Set values
+  data->entity_id = uuid;
   data->event = NULL;
   return 0;
 }

@@ -6,7 +6,6 @@
 #define MARS_COMPONENT_STEP_H
 
 #include "../mars_core.h"   // Core definitions
-#include "exports/export.h" // CMake generated header
 
 /*=======================================================*/
 /* Step Component                                        */
@@ -18,9 +17,9 @@ typedef struct {
 } ComponentStep;
 
 // Initialize component
-MARS_EXPORT uint8_t component_step_init(size_t, void**);
+MARS_API uint8_t component_step_init(size_t, void**);
 
 // Update all instances of this component
-MARS_EXPORT uint8_t component_step_update(size_t, void**);
+MARS_API uint8_t component_step_update(size_t, void**);
 
 #endif  // MARS_COMPONENT_STEP_H

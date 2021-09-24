@@ -13,22 +13,45 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-#include "containers/vector.h"          // Custom container
-#include "containers/stack.h"           // Custom container
+#include <stdarg.h>
+#include "containers/vector.h"
+#include "containers/stack.h"
 #ifdef MARS_32  // Use 32-bit hashing
-#define __UMAP_32
+  #define __UMAP_32
 #endif
-#include "containers/unordered_map.h"   // Custom container
+#include "containers/unordered_map.h"
 #ifdef MARS_32  // Use 32-bit keys
-#define __LOT_32
+  #define __LOT_32
 #endif
-#include "containers/lot.h"             // Custom container
-#include "exports/export.h"             // CMake generated header
+#include "containers/lot.h"
+
+
+/*=======================================================*/
+/* Defines                                               */
+/*=======================================================*/
+#ifdef MARS_SHARED_DEFINE
+  #ifdef MARS_EXPORTS
+    #define MARS_API __declspec(dllexport)
+  #else
+    #define MARS_API __declspec(dllimport)
+  #endif
+#else
+  #define MARS_API
+#endif
+
+#ifndef NDEBUG
+  extern uint8_t __mars_verbosity;
+#endif
+#define MARS_VERB_ERROR 0x1   // 0000 0001
+#define MARS_VERB_WARNING 0x2 // 0000 0010
+#define MARS_VERB_NOTICE 0x4  // 0000 0100
+
 
 /*=======================================================*/
 /* Typedefs                                              */
 /*=======================================================*/
 typedef uint8_t (*fptr_t)(size_t, void**);    // Function pointer type with list of void* arguments
+
 
 /*=======================================================*/
 /* Environment-specific code                             */
@@ -43,22 +66,27 @@ typedef uint8_t (*fptr_t)(size_t, void**);    // Function pointer type with list
   } timeval;
 
   // Mimic linux gettimeofday function for wall clock time measurements
-  MARS_EXPORT int gettimeofday(struct timeval * tp, struct timezone * tzp);
+  MARS_API int gettimeofday(struct timeval * tp, struct timezone * tzp);
 #elif defined(__linux__)
 	#include <sys/time.h>
 #endif
 
 // Architecture specific
 #ifdef MARS_32
-typedef uint32_t id_t;   // Use 32-bit keys for tables
+  typedef uint32_t id_t;   // Use 32-bit keys for tables
+  #define ID_NULL 0x80000000
 #else
-typedef uint64_t id_t;   // Use 64-bit keys for tables
+  typedef uint64_t id_t;   // Use 64-bit keys for tables
+  #define ID_NULL 0x8000000000000000
 #endif
+
 
 /*=======================================================*/
 /* Global functions                                      */
 /*=======================================================*/
-MARS_EXPORT id_t uuid_generate();
+MARS_API id_t uuid_generate();
+
+MARS_API void mars_log(uint8_t, const char*, ...);
 
 
 /*=======================================================================================*/
@@ -70,10 +98,10 @@ typedef struct {
 } Entity;
 
 // Create and initialize an entity
-MARS_EXPORT Entity* entity_create();
+MARS_API Entity* entity_create();
 
 // Free the resources associated with the entity
-MARS_EXPORT void entity_destroy(Entity*);
+MARS_API void entity_destroy(Entity*);
 
 
 /*=======================================================================================*/
@@ -85,23 +113,27 @@ typedef struct {
   fptr_t init;                // Function to run when initializing component
   fptr_t update;              // Function to run when updating component
   fptr_t destroy;             // Function to run when freeing component
-  id_t uuid;                 // Unique ID
+  id_t uuid;                  // Unique ID
+  size_t component_size;      // Size (in bytes) of each component
 } System;
 
 // Create and initialize a system
-MARS_EXPORT System* system_create(size_t, fptr_t, fptr_t, fptr_t);
+MARS_API System* system_create(size_t, fptr_t, fptr_t, fptr_t);
+
+// Create a new component, add it to the system, and return a reference to it
+MARS_API uint8_t system_new_component(System*, id_t);
 
 // Add a component to a system
-MARS_EXPORT uint8_t system_add_component(System*, id_t, void*);
+MARS_API uint8_t system_add_component(System*, id_t, void*);
 
 // Get the component of a system
-MARS_EXPORT void* system_get_component(System*, id_t);
+MARS_API void* system_get_component(System*, id_t);
 
 // Update all components in the system
-MARS_EXPORT void system_update(System*, float*);
+MARS_API void system_update(System*, float*);
 
 // Free all memory for this system
-MARS_EXPORT void system_destroy(System*);
+MARS_API void system_destroy(System*);
 
 
 /*=======================================================================================*/
@@ -124,24 +156,36 @@ typedef struct {
 } Engine;
 
 // Create and initialize an engine
-MARS_EXPORT Engine* engine_create(fptr_t, fptr_t);
+MARS_API Engine* engine_create(fptr_t, fptr_t, int, char**);
+
+// Create a new system, add it to the engine, and return a reference to it
+MARS_API id_t engine_new_system(Engine*, size_t, fptr_t, fptr_t, fptr_t);
 
 // Add a system to the engine
-MARS_EXPORT uint8_t engine_add_system(Engine*, id_t, System*);
+MARS_API uint8_t engine_add_system(Engine*, System*);
 
 // Get a pointer to the given system
-MARS_EXPORT System* engine_get_system(Engine*, id_t);
+MARS_API System* engine_get_system(Engine*, id_t);
+
+// Create a new entity, add it to the engine, and return a reference to it
+MARS_API id_t engine_new_entity(Engine*);
 
 // Add an entity to the engine
-MARS_EXPORT uint8_t engine_add_entity(Engine*, id_t, Entity*);
+MARS_API uint8_t engine_add_entity(Engine*, Entity*);
 
 // Get a pointer to the given entity
-MARS_EXPORT Entity* engine_get_entity(Engine*, id_t);
+MARS_API Entity* engine_get_entity(Engine*, id_t);
+
+// Give a component for the given system to the given entity
+MARS_API uint8_t engine_new_entity_component(Engine*, id_t, id_t);
+
+// Get the component for the given entity from the given system
+MARS_API void* engine_get_entity_component(Engine*, id_t, id_t);
 
 // Updates the given engine game state
-MARS_EXPORT void engine_update(Engine*);
+MARS_API void engine_update(Engine*);
 
 // Free all modules associated with the engine
-MARS_EXPORT void engine_destroy(Engine*);
+MARS_API void engine_destroy(Engine*);
 
 #endif  // MARS_CORE_H

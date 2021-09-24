@@ -6,7 +6,6 @@
 #define MARS_COMPONENT_TRANSFORM_H
 
 #include "../mars_core.h"   // Core definitions
-#include "exports/export.h" // CMake generated header
 
 /*=======================================================*/
 /* Transform Component                                   */
@@ -20,9 +19,9 @@ typedef struct {
 } ComponentTransform;
 
 // Initialize component
-MARS_EXPORT uint8_t component_transform_init(size_t, void**);
+MARS_API uint8_t component_transform_init(size_t, void**);
 
 // Update all instances of this component
-MARS_EXPORT uint8_t component_transform_update(size_t, void**);
+MARS_API uint8_t component_transform_update(size_t, void**);
 
 #endif  // MARS_COMPONENT_TRANSFORM_H

@@ -1,9 +1,14 @@
+#ifndef MARS_EXPORTS
+  #define MARS_EXPORTS
+#endif
 #include "mars/components/mars_component_transform.h"
 
 uint8_t component_transform_init(size_t num, void** args) {
   // Get reference
   ComponentTransform *data = (ComponentTransform*)args[0];
+  id_t uuid = *(id_t*)args[1];
   // Set values
+  data->entity_id = uuid;
 	data->x = 0.0f;
 	data->y = 0.0f;
 	data->l_x = 0.0f;
