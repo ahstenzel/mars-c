@@ -6,11 +6,7 @@
 #ifndef MARS_RAND_H
 #define MARS_RAND_H
 
-// Includes
 #include <stdint.h>
-
-// Defines
-#define MARS_RNG_MWC
 
 #if defined(MARS_RNG_MWC)
 /*=======================================================*/

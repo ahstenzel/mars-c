@@ -45,7 +45,7 @@ id_t uuid_generate() {
   return (id_t)(RAND & (ID_NULL - 1));
 }
 
-void mars_log(uint8_t level, const char* format, ...) {
+void mars_dlog(uint8_t level, const char* format, ...) {
   #ifndef NDEBUG
     if (level & __mars_verbosity) {
       va_list args;
@@ -64,12 +64,12 @@ System* system_create(size_t component_size, fptr_t init, fptr_t update, fptr_t 
   // Assign default values
   System* system = malloc(sizeof(*system));
   if (!system) { 
-    mars_log(MARS_VERB_ERROR, "[system_create] malloc failed!\n");
+    mars_dlog(MARS_VERB_ERROR, "[system_create] malloc failed!\n");
     return NULL; 
   }
   system->components = unordered_map_create(void*);
   if (!system->components) {
-    mars_log(MARS_VERB_ERROR, "[system_create] Failed to create component map!\n");
+    mars_dlog(MARS_VERB_ERROR, "[system_create] Failed to create component map!\n");
     free(system);
     return NULL;
   }
@@ -126,7 +126,7 @@ void* system_get_component(System* system, id_t entity_id) {
 void system_update(System* system, float* dt) {
   // Error check
   if (!system) { 
-    mars_log(MARS_VERB_ERROR, "[system_update] System reference NULL!\n");
+    mars_dlog(MARS_VERB_ERROR, "[system_update] System reference NULL!\n");
     return; 
   }
 
@@ -219,21 +219,21 @@ Engine* engine_create(fptr_t init, fptr_t destroy, int argc, char** argv) {
 id_t engine_new_system(Engine* engine, size_t component_size, fptr_t init, fptr_t update, fptr_t destroy) {
   // Error check
   if (!engine) { 
-    mars_log(MARS_VERB_ERROR, "[engine_new_system] Engine reference NULL!\n");
+    mars_dlog(MARS_VERB_ERROR, "[engine_new_system] Engine reference NULL!\n");
     return ID_NULL; 
   }
 
   // Allocate space for system
   System* system = system_create(component_size, init, update, destroy);
   if (!system) { 
-    mars_log(MARS_VERB_ERROR, "[engine_new_system] Failed to create system!\n");
+    mars_dlog(MARS_VERB_ERROR, "[engine_new_system] Failed to create system!\n");
     return ID_NULL; 
   }
 
   // Attempt to insert
   uint8_t result = unordered_map_insert(engine->systems, system->uuid, &system);
   if (result > 0) { 
-    mars_log(MARS_VERB_ERROR, "[engine_new_system] Insert failed!\n"); 
+    mars_dlog(MARS_VERB_ERROR, "[engine_new_system] Insert failed!\n"); 
     return ID_NULL;
   }
   return system->uuid;

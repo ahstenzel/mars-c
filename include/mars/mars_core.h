@@ -86,7 +86,7 @@ typedef uint8_t (*fptr_t)(size_t, void**);    // Function pointer type with list
 /*=======================================================*/
 MARS_API id_t uuid_generate();
 
-MARS_API void mars_log(uint8_t, const char*, ...);
+MARS_API void mars_dlog(uint8_t, const char*, ...);
 
 
 /*=======================================================================================*/

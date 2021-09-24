@@ -4,6 +4,7 @@
  */
 
 // Addons
+#define MARS_RNG_MWC
 #include "addons/mars_rand.h"
 
 // Core functionality

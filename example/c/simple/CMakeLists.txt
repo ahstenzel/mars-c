@@ -2,9 +2,6 @@
 cmake_minimum_required(VERSION 3.19)
 project(MyGame VERSION 1.0.0)
 
-# Set release mode
-set(CMAKE_BUILD_TYPE Release)
-
 # Set output directory
 set(OUTPUT "${PROJECT_SOURCE_DIR}/bin")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${OUTPUT})
@@ -33,7 +30,7 @@ target_link_directories(MyGame PUBLIC "${lib_dir_opt}")
 # Link to MARS library
 target_link_libraries(MyGame PUBLIC mars)
 
-# Add MARS include files
+# Add MARS header files
 target_include_directories(MyGame PUBLIC "${PROJECT_SOURCE_DIR}/../../../include")
 
 # Copy DLL afterwards

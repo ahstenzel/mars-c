@@ -20,7 +20,7 @@ uint8_t myentity_step(size_t num, void** args) {
     printf("Object pos: (%f,%f)\n", componentTransform->x, componentTransform->y);
   }
   else {
-    printf("Could not get object transform component!\n");
+    mars_dlog(MARS_VERB_ERROR, "Could not get object transform component!\n");
   }
   
   return 0;
@@ -30,7 +30,7 @@ uint8_t myengine_init(size_t num, void** args) {
 	// Decode arguments
 	Engine* engine = (Engine*)args[0];
   if (!engine) {
-    mars_log(MARS_VERB_ERROR, "Failed to decode engine!\n");
+    mars_dlog(MARS_VERB_ERROR, "Failed to decode engine!\n");
   }
 
   // Assign engine properties
@@ -48,26 +48,26 @@ uint8_t myengine_init(size_t num, void** args) {
     component_step_update, 
     NULL);
   if (systemTransformId == ID_NULL) {
-    mars_log(MARS_VERB_ERROR, "Failed to create transform system!\n");
+    mars_dlog(MARS_VERB_ERROR, "Failed to create transform system!\n");
   }
   if (systemStepId == ID_NULL) {
-    mars_log(MARS_VERB_ERROR, "Failed to create step system!\n");
+    mars_dlog(MARS_VERB_ERROR, "Failed to create step system!\n");
   }
 
   // Create entity
   id_t entityId = engine_new_entity(engine);
   if (entityId == ID_NULL) {
-    mars_log(MARS_VERB_ERROR, "Failed to create Entity!\n");
+    mars_dlog(MARS_VERB_ERROR, "Failed to create Entity!\n");
   }
 
   // Add components for entity
   uint8_t result = engine_new_entity_component(engine, systemTransformId, entityId);
   if (result > 0) {
-    mars_log(MARS_VERB_ERROR, "Failed to give the entity a transform component!\n");
+    mars_dlog(MARS_VERB_ERROR, "Failed to give the entity a transform component!\n");
   }
   result = engine_new_entity_component(engine, systemStepId, entityId);
   if (result > 0) {
-    mars_log(MARS_VERB_ERROR, "Failed to give the entity a step component!\n");
+    mars_dlog(MARS_VERB_ERROR, "Failed to give the entity a step component!\n");
   }
 
   // Configure component
@@ -76,15 +76,15 @@ uint8_t myengine_init(size_t num, void** args) {
     componentStep->event = myentity_step;
   }
   else {
-    mars_log(MARS_VERB_ERROR, "Failed to get Step component for entity!\n");
+    mars_dlog(MARS_VERB_ERROR, "Failed to get Step component for entity!\n");
   }
 
-  mars_log(MARS_VERB_NOTICE, "Initialized!\n");
+  mars_dlog(MARS_VERB_NOTICE, "Initialized!\n");
   return 0;
 }
 
 uint8_t myengine_destroy(size_t num, void** args) {
-	printf("Goodbye world!\n");
+	mars_dlog(MARS_VERB_NOTICE, "Goodbye world!\n");
 	return 0;
 }
 
