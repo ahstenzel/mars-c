@@ -1,12 +1,13 @@
 #ifndef MARS_EXPORTS
   #define MARS_EXPORTS
 #endif
+#include "internal/internal.h"
 #include "mars/mars_core.h"
 
 /*=======================================================*/
 /* Definitions                                           */
 /*=======================================================*/
-#ifndef MARS_RAND_H
+#if !defined(RAND) && !defined(RAND_SEED)
   #define RAND rand()
   #define RAND_SEED(s) srand(s)
 #endif

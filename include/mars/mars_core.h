@@ -14,17 +14,20 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdarg.h>
-#include "containers/vector.h"
-#include "containers/stack.h"
-#ifdef MARS_32  // Use 32-bit hashing
-  #define __UMAP_32
-#endif
-#include "containers/unordered_map.h"
-#ifdef MARS_32  // Use 32-bit keys
-  #define __LOT_32
-#endif
-#include "containers/lot.h"
 
+
+/*=======================================================*/
+/* Internal Predefines                                   */
+/*=======================================================*/
+#ifndef C_VECTOR_H
+typedef struct vector vector;
+#endif
+#ifndef C_STACK_H
+typedef struct stack stack;
+#endif
+#ifndef C_UMAP_H
+typedef struct unordered_map unordered_map;
+#endif
 
 /*=======================================================*/
 /* Defines                                               */
@@ -45,6 +48,9 @@
 #define MARS_VERB_ERROR 0x1   // 0000 0001
 #define MARS_VERB_WARNING 0x2 // 0000 0010
 #define MARS_VERB_NOTICE 0x4  // 0000 0100
+
+typedef uint64_t id_t;   // Use 64-bit keys for tables
+#define ID_NULL 0x8000000000000000
 
 
 /*=======================================================*/
@@ -69,15 +75,6 @@ typedef uint8_t (*fptr_t)(size_t, void**);    // Function pointer type with list
   MARS_API int gettimeofday(struct timeval * tp, struct timezone * tzp);
 #elif defined(__linux__)
 	#include <sys/time.h>
-#endif
-
-// Architecture specific
-#ifdef MARS_32
-  typedef uint32_t id_t;   // Use 32-bit keys for tables
-  #define ID_NULL 0x80000000
-#else
-  typedef uint64_t id_t;   // Use 64-bit keys for tables
-  #define ID_NULL 0x8000000000000000
 #endif
 
 

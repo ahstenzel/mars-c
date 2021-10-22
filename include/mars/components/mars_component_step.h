@@ -5,7 +5,7 @@
 #ifndef MARS_COMPONENT_STEP_H
 #define MARS_COMPONENT_STEP_H
 
-#include "../mars_core.h"   // Core definitions
+#include "mars/mars_core.h"   // Core definitions
 
 /*=======================================================*/
 /* Step Component                                        */

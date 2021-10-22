@@ -4,12 +4,11 @@
  */
 
 // Addons
-#define MARS_RNG_MWC
-#include "addons/mars_rand.h"
+#include "mars/addons/mars_rand.h"
 
 // Core functionality
-#include "mars_core.h"
+#include "mars/mars_core.h"
 
 // Built-in components
-#include "components/mars_component_transform.h"
-#include "components/mars_component_step.h"
+#include "mars/components/mars_component_transform.h"
+#include "mars/components/mars_component_step.h"
