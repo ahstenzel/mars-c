@@ -1,5 +1,5 @@
 #ifndef MARS_EXPORTS
-  #define MARS_EXPORTS
+#define MARS_EXPORTS
 #endif
 #include "internal/internal.h"
 #include "mars/components/mars_component_step.h"

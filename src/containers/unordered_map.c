@@ -170,7 +170,7 @@ umap_it_t* __umap_it(unordered_map* umap) {
 
 void __umap_next(umap_it_t** it) {
   // Error check
-  if (!it | !(*it)) { return; }
+  if (!it || !(*it)) { return; }
 
   // Find the next valid position in the array
   uint8_t* ctrl = NULL;

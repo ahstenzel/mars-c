@@ -31,6 +31,7 @@ uint8_t myengine_init(size_t num, void** args) {
 	Engine* engine = (Engine*)args[0];
   if (!engine) {
     mars_dlog(MARS_VERB_ERROR, "Failed to decode engine!\n");
+    return 1;
   }
 
   // Assign engine properties

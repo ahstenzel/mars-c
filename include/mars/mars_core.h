@@ -14,6 +14,9 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdarg.h>
+#define _USE_MATH_DEFINES
+#include <math.h>
+#include "internal/platform.h"
 
 
 /*=======================================================*/
@@ -29,6 +32,7 @@ typedef struct stack stack;
 typedef struct unordered_map unordered_map;
 #endif
 
+
 /*=======================================================*/
 /* Defines                                               */
 /*=======================================================*/
@@ -42,6 +46,7 @@ typedef struct unordered_map unordered_map;
   #define MARS_API
 #endif
 
+/* Output logging */
 #ifndef NDEBUG
   extern uint8_t __mars_verbosity;
 #endif
@@ -51,6 +56,12 @@ typedef struct unordered_map unordered_map;
 
 typedef uint64_t id_t;   // Use 64-bit keys for tables
 #define ID_NULL 0x8000000000000000
+#define ID_MASK 0x7FFFFFFFFFFFFFFF
+
+/* Useful functions */
+#define radtodeg(a) (a * (180.0 / C_PI))
+#define degtorad(a) (a * (C_PI / 180.0))
+
 
 
 /*=======================================================*/
@@ -62,7 +73,7 @@ typedef uint8_t (*fptr_t)(size_t, void**);    // Function pointer type with list
 /*=======================================================*/
 /* Environment-specific code                             */
 /*=======================================================*/
-// Platform specific
+/* Platform specific */
 #if defined(_WIN32)
 #include <Windows.h>
   // Mimic linux timeval struct
@@ -75,6 +86,11 @@ typedef uint8_t (*fptr_t)(size_t, void**);    // Function pointer type with list
   MARS_API int gettimeofday(struct timeval * tp, struct timezone * tzp);
 #elif defined(__linux__)
 	#include <sys/time.h>
+#endif
+
+/* Compiler specific */
+#if defined(MARS_CMP_MSVC)
+#include <intrin.h>   // CPU feature detection
 #endif
 
 

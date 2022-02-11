@@ -1,5 +1,5 @@
 #ifndef MARS_EXPORTS
-  #define MARS_EXPORTS
+#define MARS_EXPORTS
 #endif
 #include "internal/internal.h"
 #include "mars/mars_core.h"
@@ -43,7 +43,7 @@
 /* Global functions                                      */
 /*=======================================================*/
 id_t uuid_generate() {
-  return (id_t)(RAND & (ID_NULL - 1));
+  return (id_t)(RAND & ID_MASK);
 }
 
 void mars_dlog(uint8_t level, const char* format, ...) {
