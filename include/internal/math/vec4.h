@@ -44,7 +44,7 @@ void vec4_sety(vec4* v, float y);
 
 void vec4_setz(vec4* v, float z);
 
-void vec4_setw(vec4* v, float z);
+void vec4_setw(vec4* v, float w);
 
 bool vec4_equal(vec4* a, vec4* b);
 

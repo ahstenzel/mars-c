@@ -76,27 +76,67 @@ build CMakeFiles\mars.dir\src\components\mars_component_transform.c.obj: C_COMPI
   TARGET_COMPILE_PDB = CMakeFiles\mars.dir\mars.pdb
   TARGET_PDB = ..\..\..\bin\static\AMD64\mars.pdb
 
-build CMakeFiles\mars.dir\src\containers\stack.c.obj: C_COMPILER__mars_Debug C$:\Users\alexh\Documents\GitHub\mars-c\src\containers\stack.c || cmake_object_order_depends_target_mars
+build CMakeFiles\mars.dir\src\internal\containers\stack.c.obj: C_COMPILER__mars_Debug C$:\Users\alexh\Documents\GitHub\mars-c\src\internal\containers\stack.c || cmake_object_order_depends_target_mars
   FLAGS = /DWIN32 /D_WINDOWS /Zi /Ob0 /Od /RTC1 -MDd -std:c11
   INCLUDES = -IC:\Users\alexh\Documents\GitHub\mars-c\include
   OBJECT_DIR = CMakeFiles\mars.dir
-  OBJECT_FILE_DIR = CMakeFiles\mars.dir\src\containers
+  OBJECT_FILE_DIR = CMakeFiles\mars.dir\src\internal\containers
   TARGET_COMPILE_PDB = CMakeFiles\mars.dir\mars.pdb
   TARGET_PDB = ..\..\..\bin\static\AMD64\mars.pdb
 
-build CMakeFiles\mars.dir\src\containers\unordered_map.c.obj: C_COMPILER__mars_Debug C$:\Users\alexh\Documents\GitHub\mars-c\src\containers\unordered_map.c || cmake_object_order_depends_target_mars
+build CMakeFiles\mars.dir\src\internal\containers\unordered_map.c.obj: C_COMPILER__mars_Debug C$:\Users\alexh\Documents\GitHub\mars-c\src\internal\containers\unordered_map.c || cmake_object_order_depends_target_mars
   FLAGS = /DWIN32 /D_WINDOWS /Zi /Ob0 /Od /RTC1 -MDd -std:c11
   INCLUDES = -IC:\Users\alexh\Documents\GitHub\mars-c\include
   OBJECT_DIR = CMakeFiles\mars.dir
-  OBJECT_FILE_DIR = CMakeFiles\mars.dir\src\containers
+  OBJECT_FILE_DIR = CMakeFiles\mars.dir\src\internal\containers
   TARGET_COMPILE_PDB = CMakeFiles\mars.dir\mars.pdb
   TARGET_PDB = ..\..\..\bin\static\AMD64\mars.pdb
 
-build CMakeFiles\mars.dir\src\containers\vector.c.obj: C_COMPILER__mars_Debug C$:\Users\alexh\Documents\GitHub\mars-c\src\containers\vector.c || cmake_object_order_depends_target_mars
+build CMakeFiles\mars.dir\src\internal\containers\vector.c.obj: C_COMPILER__mars_Debug C$:\Users\alexh\Documents\GitHub\mars-c\src\internal\containers\vector.c || cmake_object_order_depends_target_mars
   FLAGS = /DWIN32 /D_WINDOWS /Zi /Ob0 /Od /RTC1 -MDd -std:c11
   INCLUDES = -IC:\Users\alexh\Documents\GitHub\mars-c\include
   OBJECT_DIR = CMakeFiles\mars.dir
-  OBJECT_FILE_DIR = CMakeFiles\mars.dir\src\containers
+  OBJECT_FILE_DIR = CMakeFiles\mars.dir\src\internal\containers
+  TARGET_COMPILE_PDB = CMakeFiles\mars.dir\mars.pdb
+  TARGET_PDB = ..\..\..\bin\static\AMD64\mars.pdb
+
+build CMakeFiles\mars.dir\src\internal\math\mat2.c.obj: C_COMPILER__mars_Debug C$:\Users\alexh\Documents\GitHub\mars-c\src\internal\math\mat2.c || cmake_object_order_depends_target_mars
+  FLAGS = /DWIN32 /D_WINDOWS /Zi /Ob0 /Od /RTC1 -MDd -std:c11
+  INCLUDES = -IC:\Users\alexh\Documents\GitHub\mars-c\include
+  OBJECT_DIR = CMakeFiles\mars.dir
+  OBJECT_FILE_DIR = CMakeFiles\mars.dir\src\internal\math
+  TARGET_COMPILE_PDB = CMakeFiles\mars.dir\mars.pdb
+  TARGET_PDB = ..\..\..\bin\static\AMD64\mars.pdb
+
+build CMakeFiles\mars.dir\src\internal\math\mat3.c.obj: C_COMPILER__mars_Debug C$:\Users\alexh\Documents\GitHub\mars-c\src\internal\math\mat3.c || cmake_object_order_depends_target_mars
+  FLAGS = /DWIN32 /D_WINDOWS /Zi /Ob0 /Od /RTC1 -MDd -std:c11
+  INCLUDES = -IC:\Users\alexh\Documents\GitHub\mars-c\include
+  OBJECT_DIR = CMakeFiles\mars.dir
+  OBJECT_FILE_DIR = CMakeFiles\mars.dir\src\internal\math
+  TARGET_COMPILE_PDB = CMakeFiles\mars.dir\mars.pdb
+  TARGET_PDB = ..\..\..\bin\static\AMD64\mars.pdb
+
+build CMakeFiles\mars.dir\src\internal\math\vec2.c.obj: C_COMPILER__mars_Debug C$:\Users\alexh\Documents\GitHub\mars-c\src\internal\math\vec2.c || cmake_object_order_depends_target_mars
+  FLAGS = /DWIN32 /D_WINDOWS /Zi /Ob0 /Od /RTC1 -MDd -std:c11
+  INCLUDES = -IC:\Users\alexh\Documents\GitHub\mars-c\include
+  OBJECT_DIR = CMakeFiles\mars.dir
+  OBJECT_FILE_DIR = CMakeFiles\mars.dir\src\internal\math
+  TARGET_COMPILE_PDB = CMakeFiles\mars.dir\mars.pdb
+  TARGET_PDB = ..\..\..\bin\static\AMD64\mars.pdb
+
+build CMakeFiles\mars.dir\src\internal\math\vec3.c.obj: C_COMPILER__mars_Debug C$:\Users\alexh\Documents\GitHub\mars-c\src\internal\math\vec3.c || cmake_object_order_depends_target_mars
+  FLAGS = /DWIN32 /D_WINDOWS /Zi /Ob0 /Od /RTC1 -MDd -std:c11
+  INCLUDES = -IC:\Users\alexh\Documents\GitHub\mars-c\include
+  OBJECT_DIR = CMakeFiles\mars.dir
+  OBJECT_FILE_DIR = CMakeFiles\mars.dir\src\internal\math
+  TARGET_COMPILE_PDB = CMakeFiles\mars.dir\mars.pdb
+  TARGET_PDB = ..\..\..\bin\static\AMD64\mars.pdb
+
+build CMakeFiles\mars.dir\src\internal\math\vec4.c.obj: C_COMPILER__mars_Debug C$:\Users\alexh\Documents\GitHub\mars-c\src\internal\math\vec4.c || cmake_object_order_depends_target_mars
+  FLAGS = /DWIN32 /D_WINDOWS /Zi /Ob0 /Od /RTC1 -MDd -std:c11
+  INCLUDES = -IC:\Users\alexh\Documents\GitHub\mars-c\include
+  OBJECT_DIR = CMakeFiles\mars.dir
+  OBJECT_FILE_DIR = CMakeFiles\mars.dir\src\internal\math
   TARGET_COMPILE_PDB = CMakeFiles\mars.dir\mars.pdb
   TARGET_PDB = ..\..\..\bin\static\AMD64\mars.pdb
 
@@ -108,30 +148,6 @@ build CMakeFiles\mars.dir\src\mars_core.c.obj: C_COMPILER__mars_Debug C$:\Users\
   TARGET_COMPILE_PDB = CMakeFiles\mars.dir\mars.pdb
   TARGET_PDB = ..\..\..\bin\static\AMD64\mars.pdb
 
-build CMakeFiles\mars.dir\src\math\vec2.c.obj: C_COMPILER__mars_Debug C$:\Users\alexh\Documents\GitHub\mars-c\src\math\vec2.c || cmake_object_order_depends_target_mars
-  FLAGS = /DWIN32 /D_WINDOWS /Zi /Ob0 /Od /RTC1 -MDd -std:c11
-  INCLUDES = -IC:\Users\alexh\Documents\GitHub\mars-c\include
-  OBJECT_DIR = CMakeFiles\mars.dir
-  OBJECT_FILE_DIR = CMakeFiles\mars.dir\src\math
-  TARGET_COMPILE_PDB = CMakeFiles\mars.dir\mars.pdb
-  TARGET_PDB = ..\..\..\bin\static\AMD64\mars.pdb
-
-build CMakeFiles\mars.dir\src\math\vec3.c.obj: C_COMPILER__mars_Debug C$:\Users\alexh\Documents\GitHub\mars-c\src\math\vec3.c || cmake_object_order_depends_target_mars
-  FLAGS = /DWIN32 /D_WINDOWS /Zi /Ob0 /Od /RTC1 -MDd -std:c11
-  INCLUDES = -IC:\Users\alexh\Documents\GitHub\mars-c\include
-  OBJECT_DIR = CMakeFiles\mars.dir
-  OBJECT_FILE_DIR = CMakeFiles\mars.dir\src\math
-  TARGET_COMPILE_PDB = CMakeFiles\mars.dir\mars.pdb
-  TARGET_PDB = ..\..\..\bin\static\AMD64\mars.pdb
-
-build CMakeFiles\mars.dir\src\math\vec4.c.obj: C_COMPILER__mars_Debug C$:\Users\alexh\Documents\GitHub\mars-c\src\math\vec4.c || cmake_object_order_depends_target_mars
-  FLAGS = /DWIN32 /D_WINDOWS /Zi /Ob0 /Od /RTC1 -MDd -std:c11
-  INCLUDES = -IC:\Users\alexh\Documents\GitHub\mars-c\include
-  OBJECT_DIR = CMakeFiles\mars.dir
-  OBJECT_FILE_DIR = CMakeFiles\mars.dir\src\math
-  TARGET_COMPILE_PDB = CMakeFiles\mars.dir\mars.pdb
-  TARGET_PDB = ..\..\..\bin\static\AMD64\mars.pdb
-
 
 # =============================================================================
 # Link build statements for STATIC_LIBRARY target mars
@@ -140,7 +156,7 @@ build CMakeFiles\mars.dir\src\math\vec4.c.obj: C_COMPILER__mars_Debug C$:\Users\
 #############################################
 # Link the static library ..\..\..\bin\static\AMD64\mars.lib
 
-build ..\..\..\bin\static\AMD64\mars.lib: C_STATIC_LIBRARY_LINKER__mars_Debug CMakeFiles\mars.dir\src\components\mars_component_step.c.obj CMakeFiles\mars.dir\src\components\mars_component_transform.c.obj CMakeFiles\mars.dir\src\containers\stack.c.obj CMakeFiles\mars.dir\src\containers\unordered_map.c.obj CMakeFiles\mars.dir\src\containers\vector.c.obj CMakeFiles\mars.dir\src\mars_core.c.obj CMakeFiles\mars.dir\src\math\vec2.c.obj CMakeFiles\mars.dir\src\math\vec3.c.obj CMakeFiles\mars.dir\src\math\vec4.c.obj
+build ..\..\..\bin\static\AMD64\mars.lib: C_STATIC_LIBRARY_LINKER__mars_Debug CMakeFiles\mars.dir\src\components\mars_component_step.c.obj CMakeFiles\mars.dir\src\components\mars_component_transform.c.obj CMakeFiles\mars.dir\src\internal\containers\stack.c.obj CMakeFiles\mars.dir\src\internal\containers\unordered_map.c.obj CMakeFiles\mars.dir\src\internal\containers\vector.c.obj CMakeFiles\mars.dir\src\internal\math\mat2.c.obj CMakeFiles\mars.dir\src\internal\math\mat3.c.obj CMakeFiles\mars.dir\src\internal\math\vec2.c.obj CMakeFiles\mars.dir\src\internal\math\vec3.c.obj CMakeFiles\mars.dir\src\internal\math\vec4.c.obj CMakeFiles\mars.dir\src\mars_core.c.obj
   LANGUAGE_COMPILE_FLAGS = /DWIN32 /D_WINDOWS /Zi /Ob0 /Od /RTC1 -MDd
   LINK_FLAGS = /machine:x64
   OBJECT_DIR = CMakeFiles\mars.dir

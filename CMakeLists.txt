@@ -24,7 +24,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${OUTPUT_DIR}")
 
 ## Create the main mars library target
 file(GLOB_RECURSE libsrc "src/*.c")
-add_library(mars ${libsrc})
+add_library(mars ${libsrc} "include/internal/math/mat2.h" "src/internal/math/mat2.c" "include/internal/math/mat3.h" "src/internal/math/mat3.c")
 add_library(mars::mars ALIAS mars)
 set_target_properties(mars PROPERTIES
                       VERSION ${mars_VERSION}
