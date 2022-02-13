@@ -8,6 +8,7 @@
 /*=======================================================*/
 /* Includes                                              */
 /*=======================================================*/
+#include "internal/platform.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -16,7 +17,6 @@
 #include <stdarg.h>
 #define _USE_MATH_DEFINES
 #include <math.h>
-#include "internal/platform.h"
 
 
 /*=======================================================*/
@@ -59,8 +59,8 @@ typedef uint64_t id_t;   // Use 64-bit keys for tables
 #define ID_MASK 0x7FFFFFFFFFFFFFFF
 
 /* Useful functions */
-#define radtodeg(a) (a * (180.0 / C_PI))
-#define degtorad(a) (a * (C_PI / 180.0))
+#define radtodeg(a) (a * (180.0 / M_PI))
+#define degtorad(a) (a * (M_PI / 180.0))
 
 
 

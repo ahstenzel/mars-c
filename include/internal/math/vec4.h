@@ -7,9 +7,8 @@
 #define MARS_MATH_VEC4_H
 
 #include <stdlib.h>
-#include <stdint.h>
-#include <string.h>
 #include <stdbool.h>
+#include <math.h>
 #include "internal/platform.h"
 
  /* Define vec4 struct */
@@ -24,46 +23,46 @@ typedef struct {
 #endif
 } vec4;
 
+#define vec4_get(v, i) (v.data[i])
+#define vec4_set(v, i, f) (v.data[i] = f)
+
+#define vec4_getx(v) (v.data[0])
+#define vec4_setx(v, f) (v.data[0] = f)
+
+#define vec4_gety(v) (v.data[1])
+#define vec4_sety(v, f) (v.data[1] = f)
+
+#define vec4_getz(v) (v.data[2])
+#define vec4_setz(v, f) (v.data[2] = f)
+
+#define vec4_getw(v) (v.data[3])
+#define vec4_setw(v, f) (v.data[3] = f)
 
 /* vec4 functions */
 vec4 vec4_make(float x, float y, float z, float w);
 
+vec4 vec4_dup(float data[]);
+
 vec4 vec4_makez();
 
-float vec4_getx(vec4* v);
+bool vec4_equal(vec4 a, vec4 b);
 
-float vec4_gety(vec4* v);
+bool vec4_equalz(vec4 v);
 
-float vec4_getw(vec4* v);
+vec4 vec4_add(vec4 a, vec4 b);
 
-float vec4_getz(vec4* v);
+vec4 vec4_sub(vec4 a, vec4 b);
 
-void vec4_setx(vec4* v, float x);
+vec4 vec4_mul(vec4 a, vec4 b);
 
-void vec4_sety(vec4* v, float y);
+vec4 vec4_div(vec4 a, vec4 b);
 
-void vec4_setz(vec4* v, float z);
+float vec4_mag(vec4 v);
 
-void vec4_setw(vec4* v, float w);
+vec4 vec4_scale(vec4 a, float s);
 
-bool vec4_equal(vec4* a, vec4* b);
+vec4 vec4_norm(vec4 v);
 
-bool vec4_equalz(vec4* v);
-
-vec4 vec4_add(vec4* a, vec4* b);
-
-vec4 vec4_sub(vec4* a, vec4* b);
-
-vec4 vec4_mul(vec4* a, vec4* b);
-
-vec4 vec4_div(vec4* a, vec4* b);
-
-float vec4_mag(vec4* v);
-
-vec4 vec4_scale(vec4* a, float s);
-
-vec4 vec4_norm(vec4* v);
-
-float vec4_dist(vec4* a, vec4* b);
+float vec4_dist(vec4 a, vec4 b);
 
 #endif

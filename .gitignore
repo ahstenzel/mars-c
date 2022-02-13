@@ -42,3 +42,4 @@ _deps
 *.sln
 *.tlog
 *.recipe
+out/

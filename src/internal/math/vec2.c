@@ -19,6 +19,19 @@ vec2 vec2_make(float x, float y) {
   return v;
 }
 
+vec2 vec2_dup(float data[]) {
+  vec2 v;
+#if defined(MARS_SIMD_AVX)
+  // Intel AVX
+#elif defined(MARS_SIMD_NEON)
+  // AMD NEON
+#else
+  // No SIMD intrinsics
+  memcpy(v.data, data, 2 * sizeof(float));
+#endif
+  return v;
+}
+
 vec2 vec2_makez() {
   vec2 v;
 #if defined(MARS_SIMD_AVX)
@@ -33,75 +46,31 @@ vec2 vec2_makez() {
   return v;
 }
 
-float vec2_getx(vec2* v) {
+bool vec2_equal(vec2 a, vec2 b) {
 #if defined(MARS_SIMD_AVX)
   // Intel AVX
 #elif defined(MARS_SIMD_NEON)
   // AMD NEON
 #else
   // No SIMD intrinsics
-  return v->data[0];
+  return (a.data[0] == b.data[0] &&
+          a.data[1] == b.data[1]);
 #endif
 }
 
-float vec2_gety(vec2* v) {
+bool vec2_equalz(vec2 v) {
 #if defined(MARS_SIMD_AVX)
   // Intel AVX
 #elif defined(MARS_SIMD_NEON)
   // AMD NEON
 #else
   // No SIMD intrinsics
-  return v->data[1];
+  return (v.data[0] == 0.0f &&
+          v.data[1] == 0.0f);
 #endif
 }
 
-void vec2_setx(vec2* v, float x) {
-#if defined(MARS_SIMD_AVX)
-  // Intel AVX
-#elif defined(MARS_SIMD_NEON)
-  // AMD NEON
-#else
-  // No SIMD intrinsics
-  v->data[0] = x;
-#endif
-}
-
-void vec2_sety(vec2* v, float y) {
-#if defined(MARS_SIMD_AVX)
-  // Intel AVX
-#elif defined(MARS_SIMD_NEON)
-  // AMD NEON
-#else
-  // No SIMD intrinsics
-  v->data[1] = y;
-#endif
-}
-
-bool vec2_equal(vec2* a, vec2* b) {
-#if defined(MARS_SIMD_AVX)
-  // Intel AVX
-#elif defined(MARS_SIMD_NEON)
-  // AMD NEON
-#else
-  // No SIMD intrinsics
-  return (a->data[0] == b->data[0] &&
-          a->data[1] == b->data[1]);
-#endif
-}
-
-bool vec2_equalz(vec2* v) {
-#if defined(MARS_SIMD_AVX)
-  // Intel AVX
-#elif defined(MARS_SIMD_NEON)
-  // AMD NEON
-#else
-  // No SIMD intrinsics
-  return (v->data[0] == 0.0f &&
-          v->data[1] == 0.0f);
-#endif
-}
-
-vec2 vec2_add(vec2* a, vec2* b) {
+vec2 vec2_add(vec2 a, vec2 b) {
   vec2 r;
 #if defined(MARS_SIMD_AVX)
   // Intel AVX
@@ -109,13 +78,13 @@ vec2 vec2_add(vec2* a, vec2* b) {
   // AMD NEON
 #else
   // No SIMD intrinsics
-  r.data[0] = a->data[0] + b->data[0];
-  r.data[1] = a->data[1] + b->data[1];
+  r.data[0] = a.data[0] + b.data[0];
+  r.data[1] = a.data[1] + b.data[1];
 #endif
   return r;
 }
 
-vec2 vec2_sub(vec2* a, vec2* b) {
+vec2 vec2_sub(vec2 a, vec2 b) {
   vec2 r;
 #if defined(MARS_SIMD_AVX)
   // Intel AVX
@@ -123,13 +92,13 @@ vec2 vec2_sub(vec2* a, vec2* b) {
   // AMD NEON
 #else
   // No SIMD intrinsics
-  r.data[0] = a->data[0] - b->data[0];
-  r.data[1] = a->data[1] - b->data[1];
+  r.data[0] = a.data[0] - b.data[0];
+  r.data[1] = a.data[1] - b.data[1];
 #endif
   return r;
 }
 
-vec2 vec2_mul(vec2* a, vec2* b) {
+vec2 vec2_mul(vec2 a, vec2 b) {
   vec2 r;
 #if defined(MARS_SIMD_AVX)
   // Intel AVX
@@ -137,13 +106,13 @@ vec2 vec2_mul(vec2* a, vec2* b) {
   // AMD NEON
 #else
   // No SIMD intrinsics
-  r.data[0] = a->data[0] * b->data[0];
-  r.data[1] = a->data[1] * b->data[1];
+  r.data[0] = a.data[0] * b.data[0];
+  r.data[1] = a.data[1] * b.data[1];
 #endif
   return r;
 }
 
-vec2 vec2_div(vec2* a, vec2* b) {
+vec2 vec2_div(vec2 a, vec2 b) {
   vec2 r;
 #if defined(MARS_SIMD_AVX)
   // Intel AVX
@@ -151,26 +120,26 @@ vec2 vec2_div(vec2* a, vec2* b) {
   // AMD NEON
 #else
   // No SIMD intrinsics
-  r.data[0] = a->data[0] / b->data[0];
-  r.data[1] = a->data[1] / b->data[1];
+  r.data[0] = a.data[0] / b.data[0];
+  r.data[1] = a.data[1] / b.data[1];
 #endif
   return r;
 }
 
-float vec2_mag(vec2* v) {
+float vec2_mag(vec2 v) {
 #if defined(MARS_SIMD_AVX)
   // Intel AVX
 #elif defined(MARS_SIMD_NEON)
   // AMD NEON
 #else
   // No SIMD intrinsics
-  float x = v->data[0];
-  float y = v->data[1];
-  return (float)sqrt(x * x + y * y);
+  float x = v.data[0];
+  float y = v.data[1];
+  return sqrtf(x * x + y * y);
 #endif
 }
 
-vec2 vec2_scale(vec2* a, float s) {
+vec2 vec2_scale(vec2 a, float s) {
   vec2 r;
 #if defined(MARS_SIMD_AVX)
   // Intel AVX
@@ -178,13 +147,13 @@ vec2 vec2_scale(vec2* a, float s) {
   // AMD NEON
 #else
   // No SIMD intrinsics
-  r.data[0] = a->data[0] * s;
-  r.data[1] = a->data[1] * s;
+  r.data[0] = a.data[0] * s;
+  r.data[1] = a.data[1] * s;
 #endif
   return r;
 }
 
-vec2 vec2_norm(vec2* v) {
+vec2 vec2_norm(vec2 v) {
   vec2 r;
 #if defined(MARS_SIMD_AVX)
   // Intel AVX
@@ -192,8 +161,8 @@ vec2 vec2_norm(vec2* v) {
   // AMD NEON
 #else
   // No SIMD intrinsics
-  float x = v->data[0];
-  float y = v->data[1];
+  float x = v.data[0];
+  float y = v.data[1];
   float mag = sqrt(x * x + y * y);
   r.data[0] = x / mag;
   r.data[1] = y / mag;
@@ -202,15 +171,15 @@ vec2 vec2_norm(vec2* v) {
   return r;
 }
 
-float vec2_dist(vec2* a, vec2* b) {
+float vec2_dist(vec2 a, vec2 b) {
 #if defined(MARS_SIMD_AVX)
   // Intel AVX
 #elif defined(MARS_SIMD_NEON)
   // AMD NEON
 #else
   // No SIMD intrinsics
-  float x = a->data[0] - b->data[0];
-  float y = a->data[1] - b->data[1];
+  float x = a.data[0] - b.data[0];
+  float y = a.data[1] - b.data[1];
   double mag = sqrt(x * x + y * y);
   return (float)fabs(mag);
 #endif

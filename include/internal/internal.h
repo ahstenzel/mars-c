@@ -15,5 +15,9 @@
 #include "internal/math/vec2.h"
 #include "internal/math/vec3.h"
 #include "internal/math/vec4.h"
+#include "internal/math/mat2.h"
+#include "internal/math/mat3.h"
+#include "internal/math/mat4.h"
+#include "internal/math/transforms.h"
 
 #endif  // MARS_INTERNAL_H
