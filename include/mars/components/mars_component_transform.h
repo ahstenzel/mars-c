@@ -5,7 +5,7 @@
 #ifndef MARS_COMPONENT_TRANSFORM_H
 #define MARS_COMPONENT_TRANSFORM_H
 
-#include "mars/mars_core.h"   // Core definitions
+#include "mars/core.h"   // Core definitions
 
 /*=======================================================*/
 /* Transform Component                                   */

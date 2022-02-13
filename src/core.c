@@ -2,7 +2,7 @@
 #define MARS_EXPORTS
 #endif
 #include "internal/internal.h"
-#include "mars/mars_core.h"
+#include "mars/core.h"
 
 /*=======================================================*/
 /* Definitions                                           */

@@ -6,208 +6,171 @@
 #include "internal/math/vec4.h"
 
 vec4 vec4_make(float x, float y, float z, float w) {
-  vec4 v;
-#if defined(CAM_SIMD_AVX)
-  // Intel AVX
-#elif defined(CAM_SIMD_NEON)
-  // AMD NEON
-#else
-  // No SIMD intrinsics
-  v.data[0] = x;
-  v.data[1] = y;
-  v.data[2] = z;
-  v.data[3] = w;
-#endif
-  return v;
-}
-
-vec4 vec4_makez() {
-  vec4 v;
-#if defined(CAM_SIMD_AVX)
-  // Intel AVX
-#elif defined(CAM_SIMD_NEON)
-  // AMD NEON
-#else
-  // No SIMD intrinsics
-  v.data[0] = 0.0f;
-  v.data[1] = 0.0f;
-  v.data[2] = 0.0f;
-  v.data[3] = 0.0f;
-#endif
+  vec4 v = { 0 };
+  vec4_setx(v, x);
+  vec4_sety(v, y);
+  vec4_setz(v, z);
+  vec4_setw(v, w);
   return v;
 }
 
 vec4 vec4_dup(float data[]) {
-  vec4 v;
+  vec4 v = { 0 };
+  memcpy(v.data, data, 4 * sizeof(float));
+  return v;
+}
+
+vec4 vec4_makez() {
+  vec4 v = { 0 };
+  vec4_setx(v, 0.0f);
+  vec4_sety(v, 0.0f);
+  vec4_setz(v, 0.0f);
+  vec4_setw(v, 0.0f);
+  return v;
+}
+
+bool vec4_equal(vec4 a, vec4 b) {
+  return (vec4_getx(a) == vec4_getx(b) &&
+          vec4_gety(a) == vec4_gety(b) &&
+          vec4_getz(a) == vec4_getz(b) &&
+          vec4_getw(a) == vec4_getw(b));
+}
+
+bool vec4_equalz(vec4 v) {
+  return (vec4_getx(v) == 0.0f &&
+          vec4_gety(v) == 0.0f &&
+          vec4_getw(v) == 0.0f &&
+          vec4_getz(v) == 0.0f);
+}
+
+vec4 vec4_add(vec4 a, vec4 b) {
+  vec4 r = { 0 };
 #if defined(MARS_SIMD_AVX)
   // Intel AVX
 #elif defined(MARS_SIMD_NEON)
   // AMD NEON
 #else
   // No SIMD intrinsics
-  memcpy(v.data, data, 4 * sizeof(float));
-#endif
-  return v;
-}
-
-bool vec4_equal(vec4 a, vec4 b) {
-#if defined(CAM_SIMD_AVX)
-  // Intel AVX
-  return mask == 0xF;
-#elif defined(CAM_SIMD_NEON)
-  // AMD NEON
-#else
-  // No SIMD intrinsics
-  return (a.data[0] == b.data[0] &&
-          a.data[1] == b.data[1] &&
-          a.data[2] == b.data[2] &&
-          a.data[3] == b.data[3]);
-#endif
-}
-
-bool vec4_equalz(vec4 v) {
-#if defined(CAM_SIMD_AVX)
-  // Intel AVX
-  return mask == 0xF;
-#elif defined(CAM_SIMD_NEON)
-  // AMD NEON
-#else
-  // No SIMD intrinsics
-  return (v.data[0] == 0.0f &&
-          v.data[1] == 0.0f &&
-          v.data[2] == 0.0f &&
-          v.data[3] == 0.0f);
-#endif
-}
-
-vec4 vec4_add(vec4 a, vec4 b) {
-  vec4 r;
-#if defined(CAM_SIMD_AVX)
-  // Intel AVX
-#elif defined(CAM_SIMD_NEON)
-  // AMD NEON
-#else
-  // No SIMD intrinsics
-  r.data[0] = a.data[0] + b.data[0];
-  r.data[1] = a.data[1] + b.data[1];
-  r.data[2] = a.data[2] + b.data[2];
-  r.data[3] = a.data[3] + b.data[3];
+  vec4_setx(r, vec4_getx(a) + vec4_getx(b));
+  vec4_sety(r, vec4_gety(a) + vec4_gety(b));
+  vec4_setz(r, vec4_getz(a) + vec4_getz(b));
+  vec4_setw(r, vec4_getw(a) + vec4_getw(b));
 #endif
   return r;
 }
 
 vec4 vec4_sub(vec4 a, vec4 b) {
-  vec4 r;
-#if defined(CAM_SIMD_AVX)
+  vec4 r = { 0 };
+#if defined(MARS_SIMD_AVX)
   // Intel AVX
-#elif defined(CAM_SIMD_NEON)
+#elif defined(MARS_SIMD_NEON)
   // AMD NEON
 #else
   // No SIMD intrinsics
-  r.data[0] = a.data[0] - b.data[0];
-  r.data[1] = a.data[1] - b.data[1];
-  r.data[2] = a.data[2] - b.data[2];
-  r.data[3] = a.data[3] - b.data[3];
+  vec4_setx(r, vec4_getx(a) - vec4_getx(b));
+  vec4_sety(r, vec4_gety(a) - vec4_gety(b));
+  vec4_setz(r, vec4_getz(a) - vec4_getz(b));
+  vec4_setw(r, vec4_getw(a) - vec4_getw(b));
 #endif
   return r;
 }
 
 vec4 vec4_mul(vec4 a, vec4 b) {
-  vec4 r;
-#if defined(CAM_SIMD_AVX)
+  vec4 r = { 0 };
+#if defined(MARS_SIMD_AVX)
   // Intel AVX
-#elif defined(CAM_SIMD_NEON)
+#elif defined(MARS_SIMD_NEON)
   // AMD NEON
 #else
   // No SIMD intrinsics
-  r.data[0] = a.data[0] * b.data[0];
-  r.data[1] = a.data[1] * b.data[1];
-  r.data[2] = a.data[2] * b.data[2];
-  r.data[3] = a.data[3] * b.data[3];
+  vec4_setx(r, vec4_getx(a) * vec4_getx(b));
+  vec4_sety(r, vec4_gety(a) * vec4_gety(b));
+  vec4_setz(r, vec4_getz(a) * vec4_getz(b));
+  vec4_setw(r, vec4_getw(a) * vec4_getw(b));
 #endif
   return r;
 }
 
 vec4 vec4_div(vec4 a, vec4 b) {
-  vec4 r;
-#if defined(CAM_SIMD_AVX)
+  vec4 r = { 0 };
+#if defined(MARS_SIMD_AVX)
   // Intel AVX
-#elif defined(CAM_SIMD_NEON)
+#elif defined(MARS_SIMD_NEON)
   // AMD NEON
 #else
   // No SIMD intrinsics
-  r.data[0] = a.data[0] / b.data[0];
-  r.data[1] = a.data[1] / b.data[1];
-  r.data[2] = a.data[2] / b.data[2];
-  r.data[3] = a.data[3] / b.data[3];
+  vec4_setx(r, vec4_getx(a) / vec4_getx(b));
+  vec4_sety(r, vec4_gety(a) / vec4_gety(b));
+  vec4_setz(r, vec4_getz(a) / vec4_getz(b));
+  vec4_setw(r, vec4_getw(a) / vec4_getw(b));
 #endif
   return r;
 }
 
 float vec4_mag(vec4 v) {
-#if defined(CAM_SIMD_AVX)
+#if defined(MARS_SIMD_AVX)
   // Intel AVX
-#elif defined(CAM_SIMD_NEON)
+#elif defined(MARS_SIMD_NEON)
   // AMD NEON
 #else
   // No SIMD intrinsics
-  float x = v.data[0];
-  float y = v.data[1];
-  float z = v.data[2];
-  float w = v.data[3];
+  float x = vec4_getx(v);
+  float y = vec4_gety(v);
+  float z = vec4_getz(v);
+  float w = vec4_getw(v);
   return sqrtf(x * x + y * y + z * z + w * w);
 #endif
 }
 
 vec4 vec4_scale(vec4 a, float s) {
-  vec4 r;
-#if defined(CAM_SIMD_AVX)
+  vec4 r = { 0 };
+#if defined(MARS_SIMD_AVX)
   // Intel AVX
-#elif defined(CAM_SIMD_NEON)
+#elif defined(MARS_SIMD_NEON)
   // AMD NEON
 #else
   // No SIMD intrinsics
-  r.data[0] = a.data[0] * s;
-  r.data[1] = a.data[1] * s;
-  r.data[2] = a.data[2] * s;
-  r.data[3] = a.data[3] * s;
+  vec4_setx(r, vec4_getx(a) * s);
+  vec4_sety(r, vec4_gety(a) * s);
+  vec4_setz(r, vec4_getz(a) * s);
+  vec4_setw(r, vec4_getw(a) * s);
 #endif
   return r;
 }
 
 vec4 vec4_norm(vec4 v) {
-  vec4 r;
-#if defined(CAM_SIMD_AVX)
+  vec4 r = { 0 };
+#if defined(MARS_SIMD_AVX)
   // Intel AVX
-#elif defined(CAM_SIMD_NEON)
+#elif defined(MARS_SIMD_NEON)
   // AMD NEON
 #else
   // No SIMD intrinsics
-  float x = v.data[0];
-  float y = v.data[1];
-  float z = v.data[2];
-  float w = v.data[3];
-  float mag = (float)sqrt(x * x + y * y + z * z + w * w);
-  r.data[0] = x / mag;
-  r.data[1] = y / mag;
-  r.data[2] = z / mag;
-  r.data[3] = 2 / mag;
+  float x = vec4_getx(v);
+  float y = vec4_gety(v);
+  float z = vec4_getz(v);
+  float w = vec4_getw(v);
+  float mag = sqrtf(x * x + y * y + z * z + w * w);
+  vec4_setx(v, x / mag);
+  vec4_sety(v, y / mag);
+  vec4_setz(v, z / mag);
+  vec4_setz(v, w / mag);
 #endif
   return r;
 }
 
 float vec4_dist(vec4 a, vec4 b) {
-#if defined(CAM_SIMD_AVX)
+#if defined(MARS_SIMD_AVX)
   // Intel AVX
-#elif defined(CAM_SIMD_NEON)
+#elif defined(MARS_SIMD_NEON)
   // AMD NEON
 #else
   // No SIMD intrinsics
-  float x = a.data[0] - b.data[0];
-  float y = a.data[1] - b.data[1];
-  float z = a.data[2] - b.data[2];
-  float w = a.data[3] - b.data[3];
-  double mag = sqrt(x * x + y * y + z * z + w * w);
-  return (float)fabs(mag);
+  float x = vec4_getx(a) - vec4_getx(b);
+  float y = vec4_gety(a) - vec4_gety(b);
+  float z = vec4_getz(a) - vec4_getz(b);
+  float w = vec4_getw(a) - vec4_getw(b);
+  float mag = sqrtf(x * x + y * y + z * z + w * w);
+  return fabs(mag);
 #endif
 }

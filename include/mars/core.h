@@ -1,5 +1,5 @@
 /*
- *  mars_core.h
+ *  core.h
  *  Declaration for core functionality to be used throughout the project.
  */
 #ifndef MARS_CORE_H

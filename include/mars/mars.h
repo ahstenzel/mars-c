@@ -7,7 +7,7 @@
 #include "mars/addons/mars_rand.h"
 
 // Core functionality
-#include "mars/mars_core.h"
+#include "mars/core.h"
 
 // Built-in components
 #include "mars/components/mars_component_transform.h"
